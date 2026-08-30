@@ -1,1 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayCentral - Memory Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for Win Effect -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* 3D Card Flip Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .transform-style-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
 
+    <!-- Navigation Bar -->
+    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="showPage('home')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                        <i class="fa-solid fa-[#5c6ac4] fa-brain text-xl text-white"></i>
+                    </div>
+                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">MindMatch</span>
+                </div>
+
+                <!-- Nav Links -->
+                <nav class="flex items-center space-x-2 sm:space-x-6">
+                    <button onclick="showPage('home')" id="nav-home" class="px-3 py-2 rounded-lg text-sm font-medium transition-colors text-indigo-400 bg-slate-700/50">
+                        <i class="fa-solid fa-house mr-1 sm:mr-2"></i>Home
+                    </button>
+                    <button onclick="showPage('game')" id="nav-game" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors">
+                        <i class="fa-solid fa-gamepad mr-1 sm:mr-2"></i>Memory Game
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area Container -->
+    <main class="flex-grow flex flex-col">
+        
+        <!-- HOME PAGE -->
+        <section id="page-home" class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div class="max-w-4xl w-full text-center space-y-8">
+                <!-- Hero Section -->
+                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium mb-2">
+                    <span class="flex h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                    <span>Brain Training Made Fun</span>
+                </div>
+                
+                <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                    Test & Expand Your <br class="hidden sm:inline">
+                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Memory Skills</span>
+                </h1>
+                
+                <p class="max-w-2xl mx-auto text-slate-400 text-base sm:text-lg">
+                    Welcome to MindMatch! Challenge your focus and visual recall with our interactive Memory Card game. Match pairs of cards as quickly as possible with the fewest moves.
+                </p>
+
+                <!-- Action Cards -->
+                <div class="pt-6 flex flex-col sm:flex-row items-center justify-center gap-6">
+                    <!-- Play Game Card/Link -->
+                    <div class="w-full sm:w-80 bg-slate-800/90 border border-slate-700 hover:border-indigo-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 text-left group">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                            <i class="fa-solid fa-clone text-2xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white mb-2">Classic Memory Game</h2>
+                        <p class="text-slate-400 text-sm mb-6">Flip cards, remember locations, and discover matching pairs against the clock!</p>
+                        <button onclick="showPage('game')" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/30">
+                            <span>Play Game Now</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- How to Play Info Card -->
+                    <div class="w-full sm:w-80 bg-slate-800/90 border border-slate-700 rounded-2xl p-6 text-left">
+                        <div class="w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4">
+                            <i class="fa-solid fa-lightbulb text-2xl"></i>
+                        </div>
+                        <h2 class="text-xl font-bold text-white mb-2">How to Play</h2>
+                        <ul class="text-slate-400 text-sm space-y-2 mb-4">
+                            <li class="flex items-start"><i class="fa-solid fa-check text-indigo-400 mt-1 mr-2 text-xs"></i>Click a card to flip it over</li>
+                            <li class="flex items-start"><i class="fa-solid fa-check text-indigo-400 mt-1 mr-2 text-xs"></i>Select a second card to find a matching pair</li>
+                            <li class="flex items-start"><i class="fa-solid fa-check text-indigo-400 mt-1 mr-2 text-xs"></i>Clear the entire board to win!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GAME PAGE -->
+        <section id="page-game" class="hidden flex-grow flex flex-col items-center justify-start py-8 px-4 sm:px-6">
+            <div class="max-w-4xl w-full flex flex-col items-center">
+                
+                <!-- Game Header Dashboard -->
+                <div class="w-full bg-slate-800/90 border border-slate-700 rounded-2xl p-4 sm:p-6 mb-8 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+                    <!-- Title/Status -->
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-white">Memory Challenge</h2>
+                        <p class="text-slate-400 text-xs sm:text-sm">Find all 8 matching pairs</p>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="flex items-center space-x-4 sm:space-x-8">
+                        <!-- Moves Counter -->
+                        <div class="text-center">
+                            <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Moves</div>
+                            <div id="moves-count" class="text-2xl font-black text-indigo-400">0</div>
+                        </div>
+
+                        <!-- Timer -->
+                        <div class="text-center">
+                            <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Time</div>
+                            <div id="timer" class="text-2xl font-black text-purple-400">00:00</div>
+                        </div>
+
+                        <!-- Pairs Found -->
+                        <div class="text-center">
+                            <div class="text-xs text-slate-400 uppercase tracking-wider font-semibold">Matches</div>
+                            <div id="pairs-count" class="text-2xl font-black text-pink-400">0/8</div>
+                        </div>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="flex items-center space-x-2">
+                        <button onclick="resetGame()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-sm font-semibold transition-colors flex items-center space-x-2">
+                            <i class="fa-solid fa-rotate-right"></i>
+                            <span class="hidden sm:inline">Restart</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Game Board Grid -->
+                <div id="game-board" class="grid grid-cols-4 gap-3 sm:gap-4 w-full max-w-lg aspect-square">
+                    <!-- Cards will be dynamically inserted here via JS -->
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Victory Modal -->
+    <div id="win-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm hidden">
+        <div class="bg-slate-800 border border-slate-700 rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl space-y-6 transform transition-all scale-100">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-amber-400 to-orange-500 flex items-center justify-center text-white text-4xl mx-auto shadow-lg shadow-orange-500/30">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <div class="space-y-2">
+                <h3 class="text-3xl font-extrabold text-white">Congratulations!</h3>
+                <p class="text-slate-400 text-sm">You completed the memory challenge!</p>
+            </div>
+
+            <!-- Stats Summary -->
+            <div class="grid grid-cols-2 gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                <div class="text-center">
+                    <span class="text-xs text-slate-500 font-semibold uppercase">Total Time</span>
+                    <p id="modal-time" class="text-xl font-bold text-purple-400">00:00</p>
+                </div>
+                <div class="text-center">
+                    <span class="text-xs text-slate-500 font-semibold uppercase">Total Moves</span>
+                    <p id="modal-moves" class="text-xl font-bold text-indigo-400">0</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="closeWinModal(); resetGame();" class="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors shadow-lg shadow-indigo-600/30">
+                    Play Again
+                </button>
+                <button onclick="closeWinModal(); showPage('home');" class="flex-1 py-3 px-4 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold transition-colors">
+                    Main Menu
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800/40 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+        <p>&copy; 2026 MindMatch. Simple & Fun Memory Games.</p>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Game Emojis (8 pairs = 16 cards total)
+        const CARD_ITEMS = ['🚀', '🎨', '🍕', '🎮', '🍩', '🦊', '🎸', '⚽'];
+        
+        // Game State Variables
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let gameStarted = false;
+        let isBoardLocked = false;
+
+        // Sound Effects using Web Audio API
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'flip') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(500, now + 0.08);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            } else if (type === 'match') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            }
+        }
+
+        // Navigation Switcher
+        function showPage(pageName) {
+            const homePage = document.getElementById('page-home');
+            const gamePage = document.getElementById('page-game');
+            const navHome = document.getElementById('nav-home');
+            const navGame = document.getElementById('nav-game');
+
+            if (pageName === 'home') {
+                homePage.classList.remove('hidden');
+                gamePage.classList.add('hidden');
+                
+                navHome.className = "px-3 py-2 rounded-lg text-sm font-medium transition-colors text-indigo-400 bg-slate-700/50";
+                navGame.className = "px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors";
+            } else {
+                homePage.classList.add('hidden');
+                gamePage.classList.remove('hidden');
+                
+                navGame.className = "px-3 py-2 rounded-lg text-sm font-medium transition-colors text-indigo-400 bg-slate-700/50";
+                navHome.className = "px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors";
+                
+                // Initialize game if first visit or board empty
+                if (cards.length === 0) {
+                    resetGame();
+                }
+            }
+        }
+
+        // Initialize & Reset Game
+        function resetGame() {
+            // Stop existing timer
+            clearInterval(timerInterval);
+            secondsElapsed = 0;
+            gameStarted = false;
+            matchedPairs = 0;
+            moves = 0;
+            flippedCards = [];
+            isBoardLocked = false;
+
+            // Update UI
+            document.getElementById('moves-count').innerText = '0';
+            document.getElementById('pairs-count').innerText = '0/8';
+            document.getElementById('timer').innerText = '00:00';
+
+            // Create shuffled pairs
+            const cardDeck = [...CARD_ITEMS, ...CARD_ITEMS];
+            shuffleArray(cardDeck);
+
+            // Render Board Cards
+            const board = document.getElementById('game-board');
+            board.innerHTML = '';
+
+            cards = cardDeck.map((symbol, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'perspective-1000 h-full w-full cursor-pointer';
+                cardEl.setAttribute('data-index', index);
+                
+                cardEl.innerHTML = `
+                    <div class="card-inner relative w-full h-full transform-style-3d transition-transform duration-500 rounded-2xl">
+                        <!-- Card Back (Covered) -->
+                        <div class="card-front absolute inset-0 bg-gradient-to-br from-slate-700 to-slate-800 border-2 border-slate-600 hover:border-indigo-400 rounded-2xl flex items-center justify-center text-slate-400 text-2xl sm:text-3xl shadow-md backface-hidden transition-colors">
+                            <i class="fa-solid fa-question text-slate-500"></i>
+                        </div>
+                        <!-- Card Front (Emoji Uncovered) -->
+                        <div class="card-back absolute inset-0 bg-slate-800 border-2 border-indigo-500 rounded-2xl flex items-center justify-center text-3xl sm:text-4xl shadow-xl rotate-y-180 backface-hidden select-none">
+                            ${symbol}
+                        </div>
+                    </div>
+                `;
+
+                cardEl.addEventListener('click', () => handleCardClick(index, cardEl, symbol));
+                board.appendChild(cardEl);
+                return { index, symbol, element: cardEl, matched: false };
+            });
+        }
+
+        // Card Click Handler
+        function handleCardClick(index, cardEl, symbol) {
+            if (isBoardLocked) return;
+            const cardObj = cards[index];
+
+            // Ignore already matched or currently flipped cards
+            if (cardObj.matched || flippedCards.some(item => item.index === index)) return;
+
+            // Start Timer on first interaction
+            if (!gameStarted) {
+                startTimer();
+                gameStarted = true;
+            }
+
+            // Flip visual animation
+            playSound('flip');
+            const innerDiv = cardEl.querySelector('.card-inner');
+            innerDiv.classList.add('rotate-y-180');
+
+            flippedCards.push({ index, symbol, element: cardEl, innerDiv });
+
+            if (flippedCards.length === 2) {
+                incrementMoves();
+                checkMatch();
+            }
+        }
+
+        // Check Match Logic
+        function checkMatch() {
+            isBoardLocked = true;
+            const [first, second] = flippedCards;
+
+            if (first.symbol === second.symbol) {
+                // Match Found
+                cards[first.index].matched = true;
+                cards[second.index].matched = true;
+
+                setTimeout(() => {
+                    playSound('match');
+                    first.element.querySelector('.card-back').classList.add('bg-indigo-950/60', 'border-emerald-400');
+                    second.element.querySelector('.card-back').classList.add('bg-indigo-950/60', 'border-emerald-400');
+                    
+                    matchedPairs++;
+                    document.getElementById('pairs-count').innerText = `${matchedPairs}/8`;
+
+                    flippedCards = [];
+                    isBoardLocked = false;
+
+                    if (matchedPairs === 8) {
+                        handleVictory();
+                    }
+                }, 400);
+
+            } else {
+                // No Match - Flip back
+                setTimeout(() => {
+                    first.innerDiv.classList.remove('rotate-y-180');
+                    second.innerDiv.classList.remove('rotate-y-180');
+
+                    flippedCards = [];
+                    isBoardLocked = false;
+                }, 900);
+            }
+        }
+
+        // Moves Counter
+        function incrementMoves() {
+            moves++;
+            document.getElementById('moves-count').innerText = moves;
+        }
+
+        // Timer Implementation
+        function startTimer() {
+            secondsElapsed = 0;
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                const secs = String(secondsElapsed % 60).padStart(2, '0');
+                document.getElementById('timer').innerText = `${mins}:${secs}`;
+            }, 1000);
+        }
+
+        // Victory State
+        function handleVictory() {
+            clearInterval(timerInterval);
+            playSound('win');
+
+            // Trigger Confetti
+            if (typeof confetti === 'function') {
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 }
+                });
+            }
+
+            // Display Modal Stats
+            const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+            const secs = String(secondsElapsed % 60).padStart(2, '0');
+            document.getElementById('modal-time').innerText = `${mins}:${secs}`;
+            document.getElementById('modal-moves').innerText = moves;
+
+            // Show Win Modal
+            setTimeout(() => {
+                document.getElementById('win-modal').classList.remove('hidden');
+            }, 500);
+        }
+
+        function closeWinModal() {
+            document.getElementById('win-modal').classList.add('hidden');
+        }
+
+        // Fisher-Yates Shuffle Algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+    </script>
+</body>
+</html>
