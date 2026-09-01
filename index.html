@@ -4,87 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PlayCentral - Memory Game</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Patrick Hand', cursive, sans-serif;
+            letter-spacing: 0.06em;
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+<body class="bg-[#FAF4ED] text-[#5C4B51] min-h-screen flex flex-col selection:bg-[#F2D7D9] selection:text-[#5C4B51]">
 
-    <!-- Navigation Bar -->
-    <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-40">
+    <header class="bg-[#FAF4ED]/90 backdrop-blur border-b border-[#E8D8CE] sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
-                <!-- Logo -->
-                <a href="#" class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                        <i class="fa-solid fa-brain text-xl text-white"></i>
+            <div class="flex items-center justify-between h-20">
+                <a href="#" class="flex items-center space-x-3 group">
+                    <div class="w-11 h-11 rounded-2xl bg-[#D8E2DC] flex items-center justify-center text-[#5C4B51] shadow-sm border border-[#C5D3CB] group-hover:scale-105 transition-transform">
+                        <i class="fa-solid fa-mug-hot text-xl text-[#6B8A7A]"></i>
                     </div>
-                    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-400">MindMatch</span>
+                    <span class="text-2xl font-bold tracking-wider text-[#5C4B51]">MindMatch</span>
                 </a>
 
-                <!-- Nav Links -->
-                <nav class="flex items-center space-x-2 sm:space-x-6">
-                    <a href="#" class="px-3 py-2 rounded-lg text-sm font-medium transition-colors text-indigo-400 bg-slate-700/50">
-                        <i class="fa-solid fa-house mr-1 sm:mr-2"></i>Home
+                <nav class="flex items-center space-x-2 sm:space-x-4">
+                    <a href="#" class="px-4 py-2 rounded-2xl text-base font-semibold transition-colors text-[#5C4B51] bg-[#FFE5D9] shadow-sm">
+                        <i class="fa-solid fa-house mr-1 sm:mr-2 text-[#E29578]"></i>Home
                     </a>
-                    <!-- Direct link to memory-game folder -->
-                    <a href="memory-game/index.html" class="px-3 py-2 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-colors">
-                        <i class="fa-solid fa-gamepad mr-1 sm:mr-2"></i>Memory Game
+                    <a href="memory-game/index.html" class="px-4 py-2 rounded-2xl text-base font-semibold text-[#8C7A6B] hover:text-[#5C4B51] hover:bg-[#FFE5D9]/50 transition-colors">
+                        <i class="fa-solid fa-gamepad mr-1 sm:mr-2 text-[#E29578]"></i>Memory Game
                     </a>
                 </nav>
             </div>
         </div>
     </header>
 
-    <!-- Main Content Area Container -->
     <main class="flex-grow flex flex-col">
         
-        <!-- HOME PAGE -->
         <section class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
             <div class="max-w-4xl w-full text-center space-y-8">
-                <!-- Hero Section -->
-                <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-sm font-medium mb-2">
-                    <span class="flex h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#FFE5D9] border border-[#FEC89A] text-[#8C7A6B] text-base font-medium mb-2 shadow-sm">
+                    <span class="flex h-2.5 w-2.5 rounded-full bg-[#E29578] animate-pulse"></span>
                     <span>Brain Training Made Fun</span>
                 </div>
                 
-                <h1 class="text-4xl sm:text-6xl font-extrabold text-white tracking-tight leading-tight">
+                <h1 class="text-4xl sm:text-6xl font-bold text-[#5C4B51] tracking-wide leading-relaxed">
                     Test & Expand Your <br class="hidden sm:inline">
-                    <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">Memory Skills</span>
+                    <span class="text-[#E29578] bg-[#FFE5D9]/60 px-4 py-1 rounded-2xl inline-block mt-1">Memory Skills</span>
                 </h1>
                 
-                <p class="max-w-2xl mx-auto text-slate-400 text-base sm:text-lg">
+                <p class="max-w-2xl mx-auto text-[#8C7A6B] text-lg sm:text-xl leading-relaxed">
                     Welcome to MindMatch! Challenge your focus and visual recall with our interactive Memory Card game. Match pairs of cards as quickly as possible with the fewest moves.
                 </p>
 
-                <!-- Action Cards -->
                 <div class="pt-6 flex flex-col sm:flex-row items-center justify-center gap-6">
-                    <!-- Play Game Card/Link -->
-                    <div class="w-full sm:w-80 bg-slate-800/90 border border-slate-700 hover:border-indigo-500/50 rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 text-left group">
-                        <div class="w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                    <div class="w-full sm:w-80 bg-[#FFF8F0] border-2 border-[#E8D8CE] hover:border-[#E29578] rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md text-left group">
+                        <div class="w-12 h-12 rounded-2xl bg-[#D8E2DC] border border-[#C5D3CB] flex items-center justify-center text-[#6B8A7A] mb-4 group-hover:bg-[#E29578] group-hover:text-white transition-all">
                             <i class="fa-solid fa-clone text-2xl"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-white mb-2">Cozy Animal Match</h2>
-                        <p class="text-slate-400 text-sm mb-6">Flip cards, remember locations, and discover matching pairs against the clock!</p>
+                        <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">Cozy Animal Match</h2>
+                        <p class="text-[#8C7A6B] text-base mb-6 leading-normal">Flip cards, remember locations, and discover matching pairs against the clock!</p>
                         
-                        <!-- Link pointing to memory-game/index.html -->
-                        <a href="memory-game/index.html" class="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/30">
+                        <a href="memory-game/index.html" class="w-full py-3 px-5 rounded-2xl bg-[#E29578] hover:bg-[#D88365] text-white text-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-sm">
                             <span>Play Game Now</span>
                             <i class="fa-solid fa-arrow-right text-xs"></i>
                         </a>
                     </div>
 
-                    <!-- How to Play Info Card -->
-                    <div class="w-full sm:w-80 bg-slate-800/90 border border-slate-700 rounded-2xl p-6 text-left">
-                        <div class="w-12 h-12 rounded-xl bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4">
+                    <div class="w-full sm:w-80 bg-[#FFF8F0] border-2 border-[#E8D8CE] rounded-3xl p-6 text-left shadow-sm">
+                        <div class="w-12 h-12 rounded-2xl bg-[#FEC89A]/40 border border-[#FEC89A] flex items-center justify-center text-[#E29578] mb-4">
                             <i class="fa-solid fa-lightbulb text-2xl"></i>
                         </div>
-                        <h2 class="text-xl font-bold text-white mb-2">How to Play</h2>
-                        <ul class="text-slate-400 text-sm space-y-2 mb-4">
-                            <li class="flex items-start"><i class="fa-solid fa-check text-indigo-400 mt-1 mr-2 text-xs"></i>Click a card to flip it over</li>
-                            <li class="flex items-start"><i class="fa-solid fa-check text-indigo-400 mt-1 mr-2 text-xs"></i>Select a second card to find a matching pair</li>
-                            <li class="flex items-start"><i class="fa-solid fa-check text-indigo-400 mt-1 mr-2 text-xs"></i>Clear the entire board to win!</li>
+                        <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">How to Play</h2>
+                        <ul class="text-[#8C7A6B] text-base space-y-2 mb-4">
+                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Click a card to flip it over</li>
+                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Select a second card to find a matching pair</li>
+                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Clear the entire board to win!</li>
                         </ul>
                     </div>
                 </div>
@@ -93,8 +89,7 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-800/40 border-t border-slate-800 py-6 text-center text-xs text-slate-500">
+    <footer class="bg-[#FAF4ED] border-t border-[#E8D8CE] py-6 text-center text-sm text-[#8C7A6B]">
         <p>&copy; 2026 Saskia. Simple & Fun Memory Games.</p>
     </footer>
 
