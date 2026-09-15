@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayCentral - Memory Game</title>
+    <title>PlayCentral - Music & Games Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,12 +25,18 @@
                     <div class="w-11 h-11 rounded-2xl bg-[#D8E2DC] flex items-center justify-center text-[#5C4B51] shadow-sm border border-[#C5D3CB] group-hover:scale-105 transition-transform">
                         <i class="fa-solid fa-mug-hot text-xl text-[#6B8A7A]"></i>
                     </div>
-                    <span class="text-2xl font-bold tracking-wider text-[#5C4B51]">MindMatch</span>
+                    <span class="text-2xl font-bold tracking-wider text-[#5C4B51]">PlayCentral</span>
                 </a>
 
                 <nav class="flex items-center space-x-2 sm:space-x-4">
+                    <button onclick="history.back()" class="px-3 py-2 rounded-2xl text-base font-semibold text-[#8C7A6B] hover:text-[#5C4B51] hover:bg-[#FFE5D9]/50 transition-colors flex items-center">
+                        <i class="fa-solid fa-arrow-left mr-1 sm:mr-2 text-[#E29578]"></i>Back
+                    </button>
                     <a href="#" class="px-4 py-2 rounded-2xl text-base font-semibold transition-colors text-[#5C4B51] bg-[#FFE5D9] shadow-sm">
                         <i class="fa-solid fa-house mr-1 sm:mr-2 text-[#E29578]"></i>Home
+                    </a>
+                    <a href="song-recommender/index.html" class="px-4 py-2 rounded-2xl text-base font-semibold text-[#8C7A6B] hover:text-[#5C4B51] hover:bg-[#FFE5D9]/50 transition-colors">
+                        <i class="fa-solid fa-music mr-1 sm:mr-2 text-[#6B8A7A]"></i>Song Recommender
                     </a>
                     <a href="memory-game/index.html" class="px-4 py-2 rounded-2xl text-base font-semibold text-[#8C7A6B] hover:text-[#5C4B51] hover:bg-[#FFE5D9]/50 transition-colors">
                         <i class="fa-solid fa-gamepad mr-1 sm:mr-2 text-[#E29578]"></i>Memory Game
@@ -43,28 +49,48 @@
     <main class="flex-grow flex flex-col">
         
         <section class="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-4xl w-full text-center space-y-8">
+            <div class="max-w-5xl w-full text-center space-y-8">
                 <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#FFE5D9] border border-[#FEC89A] text-[#8C7A6B] text-base font-medium mb-2 shadow-sm">
                     <span class="flex h-2.5 w-2.5 rounded-full bg-[#E29578] animate-pulse"></span>
-                    <span>Brain Training Made Fun</span>
+                    <span>Games & Music Hub</span>
                 </div>
                 
                 <h1 class="text-4xl sm:text-6xl font-bold text-[#5C4B51] tracking-wide leading-relaxed">
-                    Test & Expand Your <br class="hidden sm:inline">
-                    <span class="text-[#E29578] bg-[#FFE5D9]/60 px-4 py-1 rounded-2xl inline-block mt-1">Memory Skills</span>
+                    Discover Music & Play <br class="hidden sm:inline">
+                    <span class="text-[#E29578] bg-[#FFE5D9]/60 px-4 py-1 rounded-2xl inline-block mt-1">Fun Memory Games</span>
                 </h1>
                 
                 <p class="max-w-2xl mx-auto text-[#8C7A6B] text-lg sm:text-xl leading-relaxed">
-                    Welcome to MindMatch! Challenge your focus and visual recall with our interactive Memory Card game. Match pairs of cards as quickly as possible with the fewest moves.
+                    Welcome to PlayCentral! Share your favorite songs by genre or challenge your recall skills with our memory matching game.
                 </p>
 
-                <div class="pt-6 flex flex-col sm:flex-row items-center justify-center gap-6">
-                    <div class="w-full sm:w-80 bg-[#FFF8F0] border-2 border-[#E8D8CE] hover:border-[#E29578] rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md text-left group">
-                        <div class="w-12 h-12 rounded-2xl bg-[#D8E2DC] border border-[#C5D3CB] flex items-center justify-center text-[#6B8A7A] mb-4 group-hover:bg-[#E29578] group-hover:text-white transition-all">
-                            <i class="fa-solid fa-clone text-2xl"></i>
+                <div class="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
+                    
+                    <!-- Song Recommender Card -->
+                    <div class="bg-[#FFF8F0] border-2 border-[#E8D8CE] hover:border-[#6B8A7A] rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md text-left group flex flex-col justify-between">
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-[#D8E2DC] border border-[#C5D3CB] flex items-center justify-center text-[#6B8A7A] mb-4 group-hover:bg-[#6B8A7A] group-hover:text-white transition-all">
+                                <i class="fa-solid fa-music text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">Song Recommender</h2>
+                            <p class="text-[#8C7A6B] text-base mb-6 leading-normal">Browse music recommendations by genre, search for artists, or submit your own favorite tracks!</p>
                         </div>
-                        <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">Cozy Animal Match</h2>
-                        <p class="text-[#8C7A6B] text-base mb-6 leading-normal">Flip cards, remember locations, and discover matching pairs against the clock!</p>
+                        
+                        <a href="song-recommender/song-recommnder.html" class="w-full py-3 px-5 rounded-2xl bg-[#6B8A7A] hover:bg-[#5A7869] text-white text-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-sm">
+                            <span>Explore Music</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+
+                    <!-- Memory Game Card -->
+                    <div class="bg-[#FFF8F0] border-2 border-[#E8D8CE] hover:border-[#E29578] rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md text-left group flex flex-col justify-between">
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-[#FFE5D9] border border-[#FEC89A] flex items-center justify-center text-[#E29578] mb-4 group-hover:bg-[#E29578] group-hover:text-white transition-all">
+                                <i class="fa-solid fa-clone text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">Memory Match Game</h2>
+                            <p class="text-[#8C7A6B] text-base mb-6 leading-normal">Flip cards, remember locations, and discover matching pairs against the clock!</p>
+                        </div>
                         
                         <a href="memory-game/index.html" class="w-full py-3 px-5 rounded-2xl bg-[#E29578] hover:bg-[#D88365] text-white text-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-sm">
                             <span>Play Game Now</span>
@@ -72,17 +98,21 @@
                         </a>
                     </div>
 
-                    <div class="w-full sm:w-80 bg-[#FFF8F0] border-2 border-[#E8D8CE] rounded-3xl p-6 text-left shadow-sm">
-                        <div class="w-12 h-12 rounded-2xl bg-[#FEC89A]/40 border border-[#FEC89A] flex items-center justify-center text-[#E29578] mb-4">
-                            <i class="fa-solid fa-lightbulb text-2xl"></i>
+                    <!-- Instructions Card -->
+                    <div class="bg-[#FFF8F0] border-2 border-[#E8D8CE] rounded-3xl p-6 text-left shadow-sm flex flex-col justify-between md:col-span-2 lg:col-span-1">
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-[#FEC89A]/40 border border-[#FEC89A] flex items-center justify-center text-[#E29578] mb-4">
+                                <i class="fa-solid fa-lightbulb text-2xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">What You Can Do</h2>
+                            <ul class="text-[#8C7A6B] text-base space-y-2 mb-4">
+                                <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Discover songs by Pop, R&B, Rock & more</li>
+                                <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Share song recommendations with short notes</li>
+                                <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Challenge friends in memory card flipping</li>
+                            </ul>
                         </div>
-                        <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">How to Play</h2>
-                        <ul class="text-[#8C7A6B] text-base space-y-2 mb-4">
-                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Click a card to flip it over</li>
-                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Select a second card to find a matching pair</li>
-                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Clear the entire board to win!</li>
-                        </ul>
                     </div>
+
                 </div>
             </div>
         </section>
@@ -90,7 +120,7 @@
     </main>
 
     <footer class="bg-[#FAF4ED] border-t border-[#E8D8CE] py-6 text-center text-sm text-[#8C7A6B]">
-        <p>&copy; 2026 Saskia. Simple & Fun Memory Games.</p>
+        <p>&copy; 2026 Saskia. Simple & Fun Apps.</p>
     </footer>
 
 </body>
