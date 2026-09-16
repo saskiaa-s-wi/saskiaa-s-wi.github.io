@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Melody Nook - Pink & Brown Song Recommender</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Fredoka & Patrick Hand -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        pinkPastel: '#FCE7F3',
+                        pinkVibrant: '#F472B6',
+                        pinkDark: '#DB2777',
+                        pinkDeep: '#BE185D',
+                        brownPastel: '#F5E6D3',
+                        brownMuted: '#A16207',
+                        brownDark: '#582C1E',
+                        brownDeep: '#3D1E14',
+                        creamBg: '#FFF5F7'
+                    },
+                    fontFamily: {
+                        heading: ['Fredoka', 'sans-serif'],
+                        handwriting: ['Patrick Hand', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #FFF5F7;
+            color: #582C1E;
+        }
+
+        .handwriting {
+            font-family: 'Patrick Hand', cursive;
+        }
+
+        /* Cute Doodle Border & Pop Shadow utilities in Pink & Brown */
+        .doodle-card {
+            background-color: #FFFFFF;
+            border: 3px solid #582C1E;
+            box-shadow: 5px 5px 0px #F472B6;
+            border-radius: 1.25rem;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .doodle-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 7px 7px 0px #DB2777;
+        }
+
+        .doodle-btn {
+            border: 2.5px solid #582C1E;
+            box-shadow: 3px 3px 0px #582C1E;
+            border-radius: 0.85rem;
+            font-weight: 600;
+            transition: all 0.15s ease-in-out;
+        }
+
+        .doodle-btn:hover {
+            transform: translate(-1px, -1px);
+            box-shadow: 4px 4px 0px #582C1E;
+        }
+
+        .doodle-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #582C1E;
+        }
+
+        .doodle-input {
+            border: 2.5px solid #582C1E;
+            box-shadow: 3px 3px 0px #FCE7F3;
+            border-radius: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .doodle-input:focus {
+            box-shadow: 3px 3px 0px #F472B6;
+            border-color: #DB2777;
+        }
+
+        .doodle-badge {
+            border: 2px solid #582C1E;
+            box-shadow: 2px 2px 0px #582C1E;
+            border-radius: 9999px;
+        }
+
+        /* Vinyl Spin Animation */
+        @keyframes spinSlow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .spin-vinyl {
+            animation: spinSlow 3s linear infinite;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FCE7F3;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #F472B6;
+            border: 2px solid #582C1E;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-24">
+
+    <!-- Header -->
+    <header class="bg-pinkPastel border-b-4 border-brownDark sticky top-0 z-30 shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-4">
+            
+            <!-- Logo & Title -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('explore')">
+                <div class="w-12 h-12 bg-pinkVibrant rounded-2xl border-2 border-brownDark flex items-center justify-center text-white text-2xl shadow-[3px_3px_0px_#582C1E] transform -rotate-3 hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-music"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold text-brownDark tracking-wide flex items-center gap-2">
+                        Melody Nook <span class="text-xs px-2 py-0.5 bg-brownDark text-pinkPastel rounded-full border border-brownDark font-normal">Pink & Brown</span>
+                    </h1>
+                    <p class="text-xs text-brownDark/80 handwriting text-base font-semibold">Share your favorite tunes & discover hidden gems 🎧</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons & Navigation Tabs -->
+            <div class="flex items-center gap-2 md:gap-3 flex-wrap">
+                <button onclick="openSurpriseModal()" class="doodle-btn bg-pinkVibrant hover:bg-pinkDark text-white px-3 py-2 text-sm md:text-base flex items-center gap-2">
+                    <i class="fa-solid fa-dice text-lg animate-bounce"></i>
+                    <span>Surprise Me!</span>
+                </button>
+
+                <nav class="flex bg-white p-1 rounded-xl border-2 border-brownDark shadow-[2px_2px_0px_#582C1E]">
+                    <button id="tab-explore" onclick="switchTab('explore')" class="px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg transition-colors bg-pinkDark text-white border border-brownDark">
+                        <i class="fa-solid fa-compass mr-1"></i> Explore
+                    </button>
+                    <button id="tab-recommend" onclick="switchTab('recommend')" class="px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg transition-colors text-brownDark hover:bg-pinkPastel">
+                        <i class="fa-solid fa-pen-to-square mr-1"></i> Add Song
+                    </button>
+                    <button id="tab-favorites" onclick="switchTab('favorites')" class="px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg transition-colors text-brownDark hover:bg-pinkPastel">
+                        <i class="fa-solid fa-heart text-pinkDark mr-1"></i> Saved (<span id="fav-count">0</span>)
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 w-full flex-grow">
+
+        <!-- Hero Stats Sticker Banner -->
+        <section class="bg-gradient-to-r from-pinkPastel via-creamBg to-brownPastel border-3 border-brownDark rounded-2xl p-4 md:p-6 mb-8 shadow-[6px_6px_0px_#582C1E] flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="space-y-1 text-center md:text-left">
+                <div class="inline-block bg-white px-3 py-1 rounded-full border border-brownDark text-xs font-bold text-brownDark uppercase tracking-wider mb-1 shadow-[2px_2px_0px_#582C1E]">
+                    ✨ Community Music Spot
+                </div>
+                <h2 class="text-xl md:text-2xl font-bold text-brownDark">Be the first to share your favorite song!</h2>
+                <p class="handwriting text-lg text-brownDark/90">The shelf is empty and waiting for your music recommendations.</p>
+            </div>
+            
+            <!-- Quick Stat Badges -->
+            <div class="flex items-center gap-3">
+                <div class="bg-white border-2 border-brownDark px-4 py-2 rounded-xl text-center shadow-[3px_3px_0px_#582C1E]">
+                    <span id="stat-total" class="block text-2xl font-black text-pinkDark">0</span>
+                    <span class="text-xs font-semibold text-brownDark/80">Songs</span>
+                </div>
+                <div class="bg-white border-2 border-brownDark px-4 py-2 rounded-xl text-center shadow-[3px_3px_0px_#582C1E]">
+                    <span id="stat-likes" class="block text-2xl font-black text-brownMuted">0</span>
+                    <span class="text-xs font-semibold text-brownDark/80">Likes</span>
+                </div>
+                <div class="bg-white border-2 border-brownDark px-4 py-2 rounded-xl text-center shadow-[3px_3px_0px_#582C1E]">
+                    <span id="stat-genres" class="block text-2xl font-black text-pinkVibrant">5</span>
+                    <span class="text-xs font-semibold text-brownDark/80">Genres</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 1: EXPLORE SONGS -->
+        <section id="view-explore" class="space-y-6">
+            
+            <!-- Search & Filters Header Bar -->
+            <div class="bg-white border-3 border-brownDark p-4 rounded-2xl shadow-[4px_4px_0px_#F472B6] space-y-4">
+                <div class="flex flex-col md:flex-row gap-3 items-center justify-between">
+                    
+                    <!-- Search Input -->
+                    <div class="relative w-full md:w-96">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-brownDark/60"></i>
+                        <input type="text" id="search-input" oninput="handleSearchOrFilter()" placeholder="Search song title, artist, or note..." class="doodle-input w-full pl-10 pr-4 py-2 text-sm text-brownDark placeholder-brownDark/50 bg-pinkPastel/30">
+                    </div>
+
+                    <!-- Sort Dropdown & Reset -->
+                    <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+                        <label class="text-xs font-bold text-brownDark whitespace-nowrap">Sort by:</label>
+                        <select id="sort-select" onchange="handleSearchOrFilter()" class="doodle-input py-2 px-3 text-xs md:text-sm text-brownDark bg-white font-medium cursor-pointer">
+                            <option value="newest">🆕 Newest First</option>
+                            <option value="popular">🔥 Most Liked</option>
+                            <option value="title">🔤 Title (A-Z)</option>
+                        </select>
+                        <button onclick="resetFilters()" class="doodle-btn bg-brownPastel hover:bg-brownPastel/70 text-brownDark px-3 py-2 text-xs">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Genre Filter Pills -->
+                <div class="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
+                    <span class="text-xs font-bold text-brownDark whitespace-nowrap mr-1"><i class="fa-solid fa-filter"></i> Genre:</span>
+                    <button onclick="setGenreFilter('all')" data-genre="all" class="genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-pinkDark text-white border-brownDark transition-transform hover:scale-105">
+                        ✨ All Genres
+                    </button>
+                    <button onclick="setGenreFilter('pop')" data-genre="pop" class="genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-white text-brownDark hover:bg-pinkPastel transition-transform hover:scale-105">
+                        🍿 Pop
+                    </button>
+                    <button onclick="setGenreFilter('hiphop/rap')" data-genre="hiphop/rap" class="genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-white text-brownDark hover:bg-pinkPastel transition-transform hover:scale-105">
+                        🎤 Hip-Hop / Rap
+                    </button>
+                    <button onclick="setGenreFilter('R&B')" data-genre="R&B" class="genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-white text-brownDark hover:bg-pinkPastel transition-transform hover:scale-105">
+                        🎷 R&B
+                    </button>
+                    <button onclick="setGenreFilter('metal/rock')" data-genre="metal/rock" class="genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-white text-brownDark hover:bg-pinkPastel transition-transform hover:scale-105">
+                        🎸 Metal / Rock
+                    </button>
+                    <button onclick="setGenreFilter('world')" data-genre="world" class="genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-white text-brownDark hover:bg-pinkPastel transition-transform hover:scale-105">
+                        🌐 World / Indie
+                    </button>
+                </div>
+            </div>
+
+            <!-- Song Cards Grid -->
+            <div id="songs-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamic Song Cards injected here -->
+            </div>
+
+            <!-- Empty State Message -->
+            <div id="empty-state" class="text-center py-12 bg-white border-3 border-dashed border-brownDark/40 rounded-2xl p-6">
+                <div class="text-5xl mb-3">🌸🎶</div>
+                <h3 class="text-xl font-bold text-brownDark">No song recommendations yet!</h3>
+                <p class="text-sm text-brownDark/70 handwriting text-lg mt-1">Be the very first person to add a song recommendation to Melody Nook.</p>
+                <button onclick="switchTab('recommend')" class="mt-4 doodle-btn bg-pinkVibrant hover:bg-pinkDark text-white px-5 py-2.5 text-sm flex items-center gap-2 mx-auto">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Add First Recommendation</span>
+                </button>
+            </div>
+
+            <!-- Show More / Pagination Bar -->
+            <div id="pagination-container" class="text-center pt-4 hidden">
+                <button id="load-more-btn" onclick="loadMoreSongs()" class="doodle-btn bg-pinkPastel hover:bg-pinkVibrant hover:text-white text-brownDark px-6 py-3 text-sm md:text-base inline-flex items-center gap-2">
+                    <span>Show More Songs</span>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 2: RECOMMEND A SONG FORM -->
+        <section id="view-recommend" class="hidden max-w-2xl mx-auto">
+            <div class="doodle-card p-6 md:p-8 relative">
+                <div class="absolute -top-4 -right-4 bg-pinkVibrant text-white border-2 border-brownDark px-3 py-1 rounded-xl text-xs font-bold transform rotate-6 shadow-[2px_2px_0px_#582C1E]">
+                    ✍️ Share The Vibe!
+                </div>
+
+                <h2 class="text-2xl font-bold text-brownDark mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-compact-disc text-pinkDark"></i> Recommend a Song
+                </h2>
+                <p class="text-xs md:text-sm text-brownDark/80 mb-6 handwriting text-lg">
+                    Have a song you can't stop listening to? Add it below so others can enjoy it!
+                </p>
+
+                <form id="recommendation-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <!-- Song Title & Artist Group -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-brownDark mb-1">Song Title <span class="text-pinkDark">*</span></label>
+                            <input type="text" id="form-title" required placeholder="e.g. Golden Hour" class="doodle-input w-full p-2.5 text-sm text-brownDark bg-pinkPastel/20">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brownDark mb-1">Artist Name <span class="text-pinkDark">*</span></label>
+                            <input type="text" id="form-artist" required placeholder="e.g. JVKE" class="doodle-input w-full p-2.5 text-sm text-brownDark bg-pinkPastel/20">
+                        </div>
+                    </div>
+
+                    <!-- Genre & Cover Theme Selection -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-brownDark mb-1">Genre <span class="text-pinkDark">*</span></label>
+                            <select id="form-genre" required class="doodle-input w-full p-2.5 text-sm text-brownDark bg-white cursor-pointer">
+                                <option value="" disabled selected>Select a genre...</option>
+                                <option value="pop">🍿 Pop</option>
+                                <option value="hiphop/rap">🎤 Hip-Hop / Rap</option>
+                                <option value="R&B">🎷 R&B</option>
+                                <option value="metal/rock">🎸 Metal / Rock</option>
+                                <option value="world">🌐 World / Indie</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-brownDark mb-1">Vinyl / Cover Icon Theme</label>
+                            <select id="form-emoji" class="doodle-input w-full p-2.5 text-sm text-brownDark bg-white cursor-pointer">
+                                <option value="🎵">🎵 Classic Music Note</option>
+                                <option value="🌸">🌸 Pink Blossom</option>
+                                <option value="✨">✨ Bright Stars</option>
+                                <option value="🔥">🔥 High Energy</option>
+                                <option value="🌙">🌙 Chill Night</option>
+                                <option value="☕">☕ Cozy Coffee</option>
+                                <option value="🎸">🎸 Rock On</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Your Name / Handle -->
+                    <div>
+                        <label class="block text-xs font-bold text-brownDark mb-1">Your Name or Handle <span class="text-pinkDark">*</span></label>
+                        <input type="text" id="form-recommender" required placeholder="e.g. CocoaLover" class="doodle-input w-full p-2.5 text-sm text-brownDark bg-pinkPastel/20">
+                    </div>
+
+                    <!-- Comment with Live 125 Character Counter -->
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-bold text-brownDark">Why do you recommend this song? <span class="text-pinkDark">*</span></label>
+                            <span id="char-counter" class="text-xs font-bold text-brownDark/70 bg-pinkPastel px-2 py-0.5 rounded-full border border-brownDark">
+                                0 / 125
+                            </span>
+                        </div>
+                        <textarea id="form-comment" required maxlength="125" rows="3" oninput="updateCharCounter()" placeholder="Write a short note on why this track is special..." class="doodle-input w-full p-2.5 text-sm text-brownDark bg-pinkPastel/20 handwriting text-lg resize-none"></textarea>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-2">
+                        <button type="button" onclick="switchTab('explore')" class="doodle-btn bg-brownPastel hover:bg-brownPastel/70 text-brownDark px-4 py-2 text-sm">
+                            Cancel
+                        </button>
+                        <button type="submit" class="doodle-btn bg-pinkVibrant hover:bg-pinkDark text-white px-6 py-2 text-sm flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Submit Song</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW 3: SAVED FAVORITES -->
+        <section id="view-favorites" class="hidden space-y-6">
+            <div class="bg-white border-3 border-brownDark p-4 rounded-2xl shadow-[4px_4px_0px_#F472B6] flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-brownDark flex items-center gap-2">
+                        <i class="fa-solid fa-heart text-pinkDark"></i> Your Saved Favorites
+                    </h2>
+                    <p class="text-xs text-brownDark/70 handwriting text-base">Songs you bookmarked during this session.</p>
+                </div>
+                <button onclick="clearAllFavorites()" class="doodle-btn bg-pinkPastel hover:bg-pink-200 text-pinkDeep px-3 py-1.5 text-xs">
+                    Clear Favorites
+                </button>
+            </div>
+
+            <div id="favorites-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Dynamically populated favorites -->
+            </div>
+
+            <div id="fav-empty-state" class="hidden text-center py-12 bg-white border-3 border-dashed border-brownDark/40 rounded-2xl p-6">
+                <div class="text-5xl mb-3">💖</div>
+                <h3 class="text-xl font-bold text-brownDark">No favorite songs saved yet!</h3>
+                <p class="text-sm text-brownDark/70 handwriting text-lg mt-1">Click the heart icon on any song card to save it here for easy access.</p>
+                <button onclick="switchTab('explore')" class="mt-4 doodle-btn bg-pinkDark text-white px-4 py-2 text-sm">
+                    Explore Songs
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- SURPRISE ME! RANDOM PICKER MODAL -->
+    <div id="surprise-modal" class="fixed inset-0 bg-brownDark/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="doodle-card bg-white max-w-md w-full p-6 text-center space-y-5 relative transform transition-all scale-95 opacity-0 duration-300" id="surprise-card-content">
+            <button onclick="closeSurpriseModal()" class="absolute top-3 right-3 text-brownDark/60 hover:text-brownDark text-xl w-8 h-8 rounded-full flex items-center justify-center border border-brownDark hover:bg-brownPastel/50">
+                &times;
+            </button>
+
+            <div>
+                <span class="bg-pinkPastel border border-brownDark text-brownDark text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                    🎲 Random Recommendation
+                </span>
+                <h3 class="text-2xl font-bold text-brownDark mt-2">Music Roulette</h3>
+            </div>
+
+            <!-- Spinning Vinyl Graphics Container -->
+            <div class="relative w-36 h-36 mx-auto my-2">
+                <div id="surprise-vinyl" class="w-full h-full bg-neutral-900 rounded-full border-4 border-brownDark flex items-center justify-center shadow-lg relative overflow-hidden">
+                    <!-- Vinyl Grooves -->
+                    <div class="absolute inset-2 border border-neutral-700 rounded-full"></div>
+                    <div class="absolute inset-5 border border-neutral-800 rounded-full"></div>
+                    <div class="absolute inset-8 border border-neutral-700 rounded-full"></div>
+                    
+                    <!-- Vinyl Label -->
+                    <div id="surprise-vinyl-label" class="w-14 h-14 bg-pinkVibrant rounded-full border-2 border-brownDark flex items-center justify-center text-xl text-white font-bold">
+                        🎵
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Card View -->
+            <div id="surprise-result" class="space-y-2 bg-pinkPastel/40 p-4 rounded-xl border-2 border-brownDark">
+                <div class="text-xs font-bold text-pinkDark uppercase tracking-wide" id="surprise-genre">Genre</div>
+                <h4 class="text-xl font-extrabold text-brownDark leading-tight" id="surprise-title">Ready to Spin?</h4>
+                <p class="text-sm font-semibold text-brownDark/80" id="surprise-artist">Click spin below!</p>
+                <p class="handwriting text-base text-brownDark italic pt-1 border-t border-brownDark/20" id="surprise-comment">"Discover something fresh!"</p>
+            </div>
+
+            <div class="flex items-center justify-center gap-3">
+                <button id="spin-again-btn" onclick="spinSurpriseWheel()" class="doodle-btn bg-pinkVibrant hover:bg-pinkDark text-white px-5 py-2.5 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Spin Again!</span>
+                </button>
+                <button id="play-surprise-btn" onclick="playCurrentSurpriseSong()" class="doodle-btn bg-brownDark hover:bg-brownDeep text-white px-5 py-2.5 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Listen Sample</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLOATING SYNTH AUDIO PLAYER BAR -->
+    <div id="audio-player-bar" class="fixed bottom-0 left-0 right-0 bg-white border-t-4 border-brownDark z-40 p-3 shadow-[0px_-4px_10px_rgba(0,0,0,0.1)] transition-transform translate-y-full duration-300">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-4">
+            
+            <div class="flex items-center gap-3 min-w-0">
+                <div id="player-icon" class="w-10 h-10 bg-pinkVibrant border-2 border-brownDark rounded-xl flex items-center justify-center text-lg text-white flex-shrink-0 animate-pulse">
+                    🎵
+                </div>
+                <div class="truncate">
+                    <h5 id="player-title" class="text-sm font-bold text-brownDark truncate">Song Title</h5>
+                    <p id="player-artist" class="text-xs text-brownDark/70 truncate">Artist Name</p>
+                </div>
+            </div>
+
+            <!-- Player Audio Control Buttons -->
+            <div class="flex items-center gap-3">
+                <button onclick="toggleAudioPlayback()" class="w-10 h-10 rounded-full bg-pinkDark text-white border-2 border-brownDark flex items-center justify-center text-base hover:bg-pinkDeep doodle-btn">
+                    <i id="player-play-icon" class="fa-solid fa-pause"></i>
+                </button>
+                <button onclick="closeAudioPlayer()" class="text-brownDark/60 hover:text-brownDark text-lg px-2">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Audio Progress Line -->
+        <div class="w-full bg-pinkPastel h-1.5 mt-2 rounded-full overflow-hidden border border-brownDark/30">
+            <div id="player-progress" class="bg-pinkDark h-full w-0 transition-all duration-100"></div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Box -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 bg-brownDark text-white px-4 py-3 rounded-xl border-2 border-pinkVibrant shadow-[4px_4px_0px_#582C1E] flex items-center gap-3 transition-all transform translate-y-20 opacity-0 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-pinkVibrant text-xl"></i>
+        <span id="toast-message" class="text-sm font-semibold">Message goes here</span>
+    </div>
+
+    <script>
+        /* ----------------------------------------------------
+           CLEAN INITIAL DATASET (No preset recommendations)
+        ---------------------------------------------------- */
+        const INITIAL_RECOMMENDATIONS = [];
+
+        // Application State
+        let recommendations = [];
+        let favorites = [];
+        let activeTab = 'explore';
+        let currentGenreFilter = 'all';
+        let currentSort = 'newest';
+        let searchQuery = '';
+        let visibleCount = 6;
+        let currentSurpriseSong = null;
+
+        // Audio Synth State (Web Audio API)
+        let audioCtx = null;
+        let isPlayingAudio = false;
+        let currentPlayingTrackId = null;
+        let progressInterval = null;
+
+        // Initialize App on DOM Ready
+        window.onload = function() {
+            loadLocalData();
+            updateCharCounter();
+            renderStats();
+            renderSongs();
+            renderFavorites();
+        };
+
+        // Load or Initialize Data from LocalStorage
+        function loadLocalData() {
+            const savedRecs = localStorage.getItem('melody_nook_recs_v3');
+            if (savedRecs) {
+                try {
+                    recommendations = JSON.parse(savedRecs);
+                } catch(e) {
+                    recommendations = [];
+                }
+            } else {
+                recommendations = [];
+                saveRecsToStorage();
+            }
+
+            const savedFavs = localStorage.getItem('melody_nook_favs_v3');
+            if (savedFavs) {
+                try {
+                    favorites = JSON.parse(savedFavs);
+                } catch(e) {
+                    favorites = [];
+                }
+            }
+            updateFavBadge();
+        }
+
+        function saveRecsToStorage() {
+            localStorage.setItem('melody_nook_recs_v3', JSON.stringify(recommendations));
+        }
+
+        function saveFavsToStorage() {
+            localStorage.setItem('melody_nook_favs_v3', JSON.stringify(favorites));
+            updateFavBadge();
+        }
+
+        function updateFavBadge() {
+            document.getElementById('fav-count').textContent = favorites.length;
+        }
+
+        function switchTab(tab) {
+            activeTab = tab;
+            
+            // Hide all views
+            document.getElementById('view-explore').classList.add('hidden');
+            document.getElementById('view-recommend').classList.add('hidden');
+            document.getElementById('view-favorites').classList.add('hidden');
+
+            // Reset tab styles
+            const tabs = ['explore', 'recommend', 'favorites'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tab) {
+                    btn.className = "px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg transition-colors bg-pinkDark text-white border border-brownDark";
+                } else {
+                    btn.className = "px-3 py-1.5 text-xs md:text-sm font-semibold rounded-lg transition-colors text-brownDark hover:bg-pinkPastel";
+                }
+            });
+
+            // Show selected view
+            if (tab === 'explore') {
+                document.getElementById('view-explore').classList.remove('hidden');
+                renderSongs();
+            } else if (tab === 'recommend') {
+                document.getElementById('view-recommend').classList.remove('hidden');
+            } else if (tab === 'favorites') {
+                document.getElementById('view-favorites').classList.remove('hidden');
+                renderFavorites();
+            }
+        }
+
+        function renderStats() {
+            document.getElementById('stat-total').textContent = recommendations.length;
+            const totalLikes = recommendations.reduce((acc, curr) => acc + (curr.likes || 0), 0);
+            document.getElementById('stat-likes').textContent = totalLikes;
+        }
+
+        function setGenreFilter(genre) {
+            currentGenreFilter = genre;
+            
+            // Update active pill styling
+            document.querySelectorAll('.genre-pill').forEach(pill => {
+                const pGenre = pill.getAttribute('data-genre');
+                if (pGenre === genre) {
+                    pill.className = "genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-pinkDark text-white border-brownDark transition-transform hover:scale-105";
+                } else {
+                    pill.className = "genre-pill doodle-badge px-3 py-1 text-xs font-bold bg-white text-brownDark hover:bg-pinkPastel transition-transform hover:scale-105";
+                }
+            });
+
+            visibleCount = 6;
+            renderSongs();
+        }
+
+        function handleSearchOrFilter() {
+            searchQuery = document.getElementById('search-input').value.toLowerCase().trim();
+            currentSort = document.getElementById('sort-select').value;
+            visibleCount = 6;
+            renderSongs();
+        }
+
+        function resetFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('sort-select').value = 'newest';
+            searchQuery = '';
+            currentSort = 'newest';
+            setGenreFilter('all');
+        }
+
+        function getFilteredAndSortedSongs() {
+            return recommendations.filter(song => {
+                const matchesGenre = (currentGenreFilter === 'all') || (song.genre.toLowerCase() === currentGenreFilter.toLowerCase());
+                const matchesSearch = !searchQuery || 
+                    song.title.toLowerCase().includes(searchQuery) ||
+                    song.artist.toLowerCase().includes(searchQuery) ||
+                    song.recommender.toLowerCase().includes(searchQuery) ||
+                    song.comment.toLowerCase().includes(searchQuery);
+
+                return matchesGenre && matchesSearch;
+            }).sort((a, b) => {
+                if (currentSort === 'popular') {
+                    return (b.likes || 0) - (a.likes || 0);
+                } else if (currentSort === 'title') {
+                    return a.title.localeCompare(b.title);
+                } else {
+                    return new Date(b.createdAt) - new Date(a.createdAt);
+                }
+            });
+        }
+
+        function renderSongs() {
+            const grid = document.getElementById('songs-grid');
+            const emptyState = document.getElementById('empty-state');
+            const loadMoreBtn = document.getElementById('load-more-btn');
+
+            const filtered = getFilteredAndSortedSongs();
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                document.getElementById('pagination-container').classList.add('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            const visibleSongs = filtered.slice(0, visibleCount);
+            grid.innerHTML = visibleSongs.map(song => createSongCardHTML(song)).join('');
+
+            // Show / Hide Load More
+            if (filtered.length > visibleCount) {
+                document.getElementById('pagination-container').classList.remove('hidden');
+                loadMoreBtn.querySelector('span').textContent = `Show More Songs (${filtered.length - visibleCount} left)`;
+            } else {
+                document.getElementById('pagination-container').classList.add('hidden');
+            }
+        }
+
+        function loadMoreSongs() {
+            visibleCount += 6;
+            renderSongs();
+        }
+
+        function createSongCardHTML(song) {
+            const isFav = favorites.includes(song.id);
+            const genreBadgeColors = {
+                'pop': 'bg-pinkPastel text-pinkDark',
+                'hiphop/rap': 'bg-brownPastel text-brownDark',
+                'R&B': 'bg-pink-100 text-pinkDeep',
+                'metal/rock': 'bg-amber-100 text-amber-900',
+                'world': 'bg-rose-100 text-rose-800'
+            };
+            const badgeClass = genreBadgeColors[song.genre.toLowerCase()] || 'bg-pinkPastel text-brownDark';
+
+            return `
+                <div class="doodle-card p-5 flex flex-col justify-between relative group">
+                    <div>
+                        <!-- Header Tag & Favorite Button -->
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="doodle-badge px-2.5 py-0.5 text-xs font-bold ${badgeClass}">
+                                ${song.emoji || '🎵'} ${song.genre.toUpperCase()}
+                            </span>
+                            <button onclick="toggleFavorite('${song.id}')" title="Save song" class="text-xl transition-transform hover:scale-125 focus:outline-none">
+                                <i class="${isFav ? 'fa-solid fa-heart text-pinkDark' : 'fa-regular fa-heart text-brownDark/50 hover:text-pinkDark'}"></i>
+                            </button>
+                        </div>
+
+                        <!-- Song Info -->
+                        <h3 class="text-lg font-extrabold text-brownDark leading-snug line-clamp-1">${escapeHTML(song.title)}</h3>
+                        <p class="text-xs font-bold text-pinkDark mb-3 line-clamp-1">by ${escapeHTML(song.artist)}</p>
+
+                        <!-- Recommender Note Card -->
+                        <div class="bg-pinkPastel/30 border-2 border-brownDark p-3 rounded-xl mb-4 relative">
+                            <i class="fa-solid fa-quote-left text-brownDark/20 text-xl absolute top-1 left-2"></i>
+                            <p class="handwriting text-lg text-brownDark relative z-10 leading-snug pl-2">
+                                "${escapeHTML(song.comment)}"
+                            </p>
+                            <p class="text-right text-xs font-bold text-brownDark/70 mt-1">
+                                — ${escapeHTML(song.recommender)}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Action Controls -->
+                    <div class="flex items-center justify-between pt-2 border-t-2 border-dashed border-brownDark/20">
+                        <button onclick="playSongSynth('${song.id}')" class="doodle-btn bg-pinkDark hover:bg-pinkDeep text-white px-3 py-1.5 text-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Preview</span>
+                        </button>
+
+                        <button onclick="likeSong('${song.id}')" class="doodle-btn bg-brownPastel hover:bg-brownPastel/80 text-brownDark px-3 py-1.5 text-xs flex items-center gap-1">
+                            <i class="fa-solid fa-thumbs-up text-brownDark"></i>
+                            <span id="likes-count-${song.id}" class="font-bold">${song.likes || 0}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFavorites() {
+            const grid = document.getElementById('favorites-grid');
+            const emptyState = document.getElementById('fav-empty-state');
+
+            const favSongs = recommendations.filter(s => favorites.includes(s.id));
+
+            if (favSongs.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.innerHTML = favSongs.map(song => createSongCardHTML(song)).join('');
+        }
+
+        function toggleFavorite(id) {
+            const index = favorites.indexOf(id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                showToast("Removed from saved favorites!", "info");
+            } else {
+                favorites.push(id);
+                showToast("Added to saved favorites! ❤️", "success");
+            }
+            saveFavsToStorage();
+            renderSongs();
+            if (activeTab === 'favorites') renderFavorites();
+        }
+
+        function clearAllFavorites() {
+            if (favorites.length === 0) return;
+            favorites = [];
+            saveFavsToStorage();
+            renderSongs();
+            renderFavorites();
+            showToast("Favorites cleared!", "info");
+        }
+
+        function updateCharCounter() {
+            const comment = document.getElementById('form-comment').value;
+            const count = comment.length;
+            const counter = document.getElementById('char-counter');
+            counter.textContent = `${count} / 125`;
+
+            if (count >= 120) {
+                counter.className = "text-xs font-bold text-pinkDeep bg-pinkPastel px-2 py-0.5 rounded-full border border-pinkDark";
+            } else if (count >= 90) {
+                counter.className = "text-xs font-bold text-brownDark bg-pinkVibrant text-white px-2 py-0.5 rounded-full border border-brownDark";
+            } else {
+                counter.className = "text-xs font-bold text-brownDark/70 bg-pinkPastel px-2 py-0.5 rounded-full border border-brownDark";
+            }
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('form-title').value.trim();
+            const artist = document.getElementById('form-artist').value.trim();
+            const genre = document.getElementById('form-genre').value;
+            const emoji = document.getElementById('form-emoji').value;
+            const recommender = document.getElementById('form-recommender').value.trim();
+            const comment = document.getElementById('form-comment').value.trim();
+
+            if (!title || !artist || !genre || !recommender || !comment) {
+                showToast("Please fill in all required fields!", "error");
+                return;
+            }
+
+            const newSong = {
+                id: 'rec-' + Date.now(),
+                title,
+                artist,
+                genre,
+                recommender,
+                comment,
+                emoji: emoji || '🎵',
+                likes: 1,
+                createdAt: new Date().toISOString()
+            };
+
+            recommendations.unshift(newSong);
+            saveRecsToStorage();
+            renderStats();
+
+            // Reset Form
+            document.getElementById('recommendation-form').reset();
+            updateCharCounter();
+
+            showToast("Song recommended successfully! 🎉", "success");
+            switchTab('explore');
+        }
+
+        function likeSong(id) {
+            const song = recommendations.find(s => s.id === id);
+            if (song) {
+                song.likes = (song.likes || 0) + 1;
+                saveRecsToStorage();
+                renderStats();
+                const countElem = document.getElementById(`likes-count-${id}`);
+                if (countElem) countElem.textContent = song.likes;
+                showToast(`Liked "${song.title}"! 👍`, "success");
+            }
+        }
+
+        function openSurpriseModal() {
+            const modal = document.getElementById('surprise-modal');
+            const card = document.getElementById('surprise-card-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('scale-95', 'opacity-0');
+                card.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            if (recommendations.length === 0) {
+                document.getElementById('surprise-title').textContent = "No Songs Added Yet!";
+                document.getElementById('surprise-artist').textContent = "Add a song recommendation first!";
+                document.getElementById('surprise-genre').textContent = "✨ EMPTY";
+                document.getElementById('surprise-comment').textContent = "Click 'Add Song' above to add music to the nook.";
+                document.getElementById('spin-again-btn').disabled = true;
+                document.getElementById('play-surprise-btn').disabled = true;
+            } else {
+                document.getElementById('spin-again-btn').disabled = false;
+                document.getElementById('play-surprise-btn').disabled = false;
+                spinSurpriseWheel();
+            }
+        }
+
+        function closeSurpriseModal() {
+            const modal = document.getElementById('surprise-modal');
+            const card = document.getElementById('surprise-card-content');
+            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function spinSurpriseWheel() {
+            if (recommendations.length === 0) return;
+
+            const vinyl = document.getElementById('surprise-vinyl');
+            const spinBtn = document.getElementById('spin-again-btn');
+            
+            spinBtn.disabled = true;
+            vinyl.classList.add('spin-vinyl');
+
+            playChimeSound();
+
+            let counter = 0;
+            const interval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * recommendations.length);
+                const tempSong = recommendations[randomIndex];
+                document.getElementById('surprise-title').textContent = tempSong.title;
+                document.getElementById('surprise-artist').textContent = `by ${tempSong.artist}`;
+                counter++;
+                if (counter > 12) {
+                    clearInterval(interval);
+                    vinyl.classList.remove('spin-vinyl');
+                    spinBtn.disabled = false;
+                    
+                    // Final Pick
+                    currentSurpriseSong = tempSong;
+                    document.getElementById('surprise-title').textContent = currentSurpriseSong.title;
+                    document.getElementById('surprise-artist').textContent = `by ${currentSurpriseSong.artist}`;
+                    document.getElementById('surprise-genre').textContent = `✨ ${currentSurpriseSong.genre.toUpperCase()}`;
+                    document.getElementById('surprise-comment').textContent = `"${currentSurpriseSong.comment}" — ${currentSurpriseSong.recommender}`;
+                    document.getElementById('surprise-vinyl-label').textContent = currentSurpriseSong.emoji || '🎵';
+                }
+            }, 100);
+        }
+
+        function playCurrentSurpriseSong() {
+            if (currentSurpriseSong) {
+                closeSurpriseModal();
+                playSongSynth(currentSurpriseSong.id);
+            }
+        }
+
+        function initAudioContext() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playChimeSound() {
+            initAudioContext();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+
+        function playSongSynth(songId) {
+            initAudioContext();
+            stopCurrentAudio();
+
+            const song = recommendations.find(s => s.id === songId);
+            if (!song) return;
+
+            currentPlayingTrackId = songId;
+            isPlayingAudio = true;
+
+            // Display Floating Player
+            const playerBar = document.getElementById('audio-player-bar');
+            document.getElementById('player-title').textContent = song.title;
+            document.getElementById('player-artist').textContent = `by ${song.artist}`;
+            document.getElementById('player-icon').textContent = song.emoji || '🎵';
+            document.getElementById('player-play-icon').className = 'fa-solid fa-pause';
+            playerBar.classList.remove('translate-y-full');
+
+            const hash = songId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const baseFreqs = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+            const notes = [];
+            for (let i = 0; i < 8; i++) {
+                notes.push(baseFreqs[(hash + i * 3) % baseFreqs.length]);
+            }
+
+            let step = 0;
+            let duration = 6000;
+            let startTime = Date.now();
+
+            const noteInterval = setInterval(() => {
+                if (!isPlayingAudio) {
+                    clearInterval(noteInterval);
+                    return;
+                }
+
+                if (audioCtx) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = (step % 2 === 0) ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(notes[step % notes.length], audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.45);
+                }
+
+                step++;
+            }, 300);
+
+            const progressBar = document.getElementById('player-progress');
+            progressBar.style.width = '0%';
+
+            progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const percent = Math.min((elapsed / duration) * 100, 100);
+                progressBar.style.width = `${percent}%`;
+
+                if (elapsed >= duration) {
+                    clearInterval(progressInterval);
+                    clearInterval(noteInterval);
+                    toggleAudioPlayback();
+                }
+            }, 100);
+        }
+
+        function stopCurrentAudio() {
+            isPlayingAudio = false;
+            if (progressInterval) clearInterval(progressInterval);
+            document.getElementById('player-progress').style.width = '0%';
+        }
+
+        function toggleAudioPlayback() {
+            const playIcon = document.getElementById('player-play-icon');
+            if (isPlayingAudio) {
+                isPlayingAudio = false;
+                playIcon.className = 'fa-solid fa-play';
+            } else if (currentPlayingTrackId) {
+                playSongSynth(currentPlayingTrackId);
+            }
+        }
+
+        function closeAudioPlayer() {
+            stopCurrentAudio();
+            document.getElementById('audio-player-bar').classList.add('translate-y-full');
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = message;
+
+            if (type === 'success') {
+                toastIcon.className = 'fa-solid fa-circle-check text-pinkVibrant text-xl';
+            } else if (type === 'info') {
+                toastIcon.className = 'fa-solid fa-circle-info text-pinkDark text-xl';
+            } else {
+                toastIcon.className = 'fa-solid fa-triangle-exclamation text-amber-500 text-xl';
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>
