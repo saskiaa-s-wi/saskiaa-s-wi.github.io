@@ -38,9 +38,12 @@
             }
         };
 
-        // Default credentials
-        let SUPABASE_URL = localStorage.getItem('melody_supabase_url') || 'YOUR_SUPABASE_URL_HERE';
-        let SUPABASE_ANON_KEY = localStorage.getItem('melody_supabase_key') || 'YOUR_SUPABASE_ANON_KEY_HERE';
+        // Your default Supabase Credentials
+        const DEFAULT_URL = 'https://knfigmqlgligwgeahfft.supabase.co';
+        const DEFAULT_KEY = 'sb_publishable_CysVC82C3hFI2QajcbOCnQ_yBTISwPn';
+
+        let SUPABASE_URL = localStorage.getItem('melody_supabase_url') || DEFAULT_URL;
+        let SUPABASE_ANON_KEY = localStorage.getItem('melody_supabase_key') || DEFAULT_KEY;
 
         let supabaseClient = null;
 
@@ -64,12 +67,8 @@
             const urlInput = document.getElementById('cfg-url');
             const keyInput = document.getElementById('cfg-key');
             
-            if (urlInput && SUPABASE_URL && !SUPABASE_URL.includes('YOUR_SUPABASE')) {
-                urlInput.value = SUPABASE_URL;
-            }
-            if (keyInput && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')) {
-                keyInput.value = SUPABASE_ANON_KEY;
-            }
+            if (urlInput) urlInput.value = SUPABASE_URL;
+            if (keyInput) keyInput.value = SUPABASE_ANON_KEY;
 
             // Clean and normalize URL
             let cleanUrl = (SUPABASE_URL || '').trim().replace(/\/+$/, '');
@@ -87,7 +86,7 @@
                 isValidUrl = false;
             }
 
-            if (isValidUrl && SUPABASE_ANON_KEY && !cleanUrl.includes('YOUR_SUPABASE') && !SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')) {
+            if (isValidUrl && SUPABASE_ANON_KEY) {
                 try {
                     if (window.supabase && typeof window.supabase.createClient === 'function') {
                         supabaseClient = window.supabase.createClient(cleanUrl, SUPABASE_ANON_KEY.trim());
@@ -102,7 +101,7 @@
             }
             
             const statusEl = document.getElementById('connection-status-text');
-            if (statusEl) statusEl.innerHTML = '<span class="text-amber-300 font-semibold">⚠️ Offline (Paste your actual Supabase URL & Key above)</span>';
+            if (statusEl) statusEl.innerHTML = '<span class="text-amber-300 font-semibold">⚠️ Offline Mode (Using local data)</span>';
             loadFallbackData();
         };
 
@@ -147,13 +146,9 @@
                     console.error('Supabase fetch error:', error);
                     const statusEl = document.getElementById('connection-status-text');
                     if (statusEl) {
-                        statusEl.innerHTML = '<span class="text-rose-300 font-semibold">⚠️ Unreachable URL / Invalid Credentials</span>';
+                        statusEl.innerHTML = '<span class="text-rose-300 font-semibold">⚠️ Database Error / Check Policies</span>';
                     }
-                    if (error.message && error.message.includes('Failed to fetch')) {
-                        showToast('Could not reach Supabase. Check your Project URL!', 'error');
-                    } else {
-                        showToast('Failed to fetch songs from database', 'error');
-                    }
+                    showToast('Could not reach Supabase. Checking local storage...', 'error');
                     loadFallbackData();
                     return;
                 }
@@ -531,7 +526,7 @@
                     submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>Submit Song</span>';
                 }
                 
-                showToast("Saved locally (Offline mode)! Connect Supabase to share.", "info");
+                showToast("Saved locally (Offline mode)!", "info");
                 renderStats();
                 renderSongs();
             }
@@ -541,15 +536,23 @@
             switchTab('explore');
         };
 
-        window.likeSong = function(id) {
+        window.likeSong = async function(id) {
             const song = recommendations.find(s => s.id === id);
-            if (song) {
-                song.likes = (song.likes || 1) + 1;
-                renderStats();
-                const countElem = document.getElementById(`likes-count-${id}`);
-                if (countElem) countElem.textContent = song.likes;
-                showToast(`Liked "${song.title}"! 👍`, "success");
+            if (!song) return;
+
+            song.likes = (song.likes || 1) + 1;
+            renderStats();
+            const countElem = document.getElementById(`likes-count-${id}`);
+            if (countElem) countElem.textContent = song.likes;
+
+            if (supabaseClient) {
+                await supabaseClient
+                    .from('songs')
+                    .update({ likes: song.likes })
+                    .eq('id', id);
             }
+
+            showToast(`Liked "${song.title}"! 👍`, "success");
         };
 
         window.openSurpriseModal = function() {
@@ -893,10 +896,10 @@
                 <span id="connection-status-text" class="text-pinkPastel font-medium">Connecting to Supabase...</span>
             </div>
             <div class="flex items-center gap-2 w-full md:w-auto">
-                <input type="text" id="cfg-url" placeholder="Project URL (https://xyz.supabase.co)" class="px-2 py-1 text-brownDark rounded w-1/2 md:w-56 text-xs border border-white">
-                <input type="password" id="cfg-key" placeholder="Publishable Key (sb_pub_...)" class="px-2 py-1 text-brownDark rounded w-1/2 md:w-56 text-xs border border-white">
+                <input type="text" id="cfg-url" placeholder="Project URL" class="px-2 py-1 text-brownDark rounded w-1/2 md:w-56 text-xs border border-white">
+                <input type="password" id="cfg-key" placeholder="Publishable Key" class="px-2 py-1 text-brownDark rounded w-1/2 md:w-56 text-xs border border-white">
                 <button onclick="saveSupabaseConfig()" class="bg-pinkVibrant hover:bg-pinkDark text-white px-3 py-1 rounded font-bold transition">
-                    Connect
+                    Save Config
                 </button>
             </div>
         </div>
