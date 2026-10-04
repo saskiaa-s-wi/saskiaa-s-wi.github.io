@@ -66,14 +66,15 @@ An app for AP Physics students (including test users Areej, Mariam, and Hania) t
 - GitHub client secret: configured directly in Supabase Dashboard under Authentication -> Providers -> GitHub (never stored in code or project.md).
 
 ## Where we are right now
-Planning complete, nothing built yet.
+Initial code structure created for `index.html`, `app.js`, and `config.js`.
 
 ## NOT doing, on purpose
 - Forgot password email resets and email confirmation emails (Supabase free tier limits external email delivery).
 - AI summarization or automated flashcard generation (reserved for Build 4).
 
 ## Next thing I want to add
-Set up Supabase sign-in settings, then email + password sign-in.
+Set up Supabase URL and publishable key in `config.js`, configure Supabase Auth settings, and test email/password & GitHub sign-in flows.
 
 ## Change log
 - September 29, 2026: Planning session with Build 2 Planner. Plan confirmed.
+- October 4, 2026: Initial setup of `index.html`, `app.js`, and `config.js`.

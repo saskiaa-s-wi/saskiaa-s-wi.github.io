@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AP Physics Study Notes Hub</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --border: #e2e8f0;
+      --error: #ef4444;
+      --success: #22c55e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      color: var(--primary);
+    }
+
+    nav button {
+      margin-left: 0.5rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      width: 100%;
+    }
+
+    .screen {
+      display: none;
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.25rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button.secondary {
+      background-color: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    button.secondary:hover {
+      background-color: var(--border);
+    }
+
+    button.danger {
+      background-color: var(--error);
+    }
+
+    .github-btn {
+      background-color: #24292e;
+      color: white;
+      width: 100%;
+      margin-top: 1rem;
+    }
+
+    .github-btn:hover {
+      background-color: #000000;
+    }
+
+    .divider {
+      text-align: center;
+      margin: 1.5rem 0;
+      position: relative;
+    }
+
+    .divider::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      border-top: 1px solid var(--border);
+      z-index: 1;
+    }
+
+    .divider span {
+      background: var(--card-bg);
+      padding: 0 0.5rem;
+      position: relative;
+      z-index: 2;
+      color: #64748b;
+      font-size: 0.875rem;
+    }
+
+    .message {
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      display: none;
+      font-size: 0.875rem;
+    }
+
+    .message.error {
+      display: block;
+      background-color: #fef2f2;
+      color: var(--error);
+      border: 1px solid #fecaca;
+    }
+
+    .message.success {
+      display: block;
+      background-color: #f0fdf4;
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 600;
+    }
+
+    .tab.active {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .note-card {
+      border: 1px solid var(--border);
+      padding: 1rem;
+      border-radius: 6px;
+      background: #fafafa;
+    }
+
+    .note-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .note-card .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+    }
+
+    .note-card p {
+      font-size: 0.875rem;
+      color: #475569;
+      margin-bottom: 0.75rem;
+    }
+
+    .note-card .meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      margin-bottom: 0.75rem;
+    }
+
+    .note-card .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .checkbox-group input {
+      width: auto;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+  <header>
+    <h1>AP Physics Study Notes Hub</h1>
+    <nav id="nav-actions" style="display: none;">
+      <span id="user-display" style="margin-right: 1rem; font-weight: 600;"></span>
+      <button class="secondary" id="nav-dashboard-btn">Dashboard</button>
+      <button class="secondary" id="nav-settings-btn">Settings</button>
+      <button class="secondary" id="signout-btn">Sign Out</button>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div id="auth-msg" class="message"></div>
+
+    <!-- Screen 1: Sign-In / Sign-Up Screen -->
+    <div id="auth-screen" class="screen active">
+      <h2 id="auth-title">Sign In</h2>
+      <form id="auth-form">
+        <div class="form-group">
+          <label for="auth-email">Email Address</label>
+          <input type="email" id="auth-email" required placeholder="student@example.com">
+        </div>
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" required placeholder="••••••••">
+          <small id="password-hint" style="display:none; color: #64748b;">
+            Must be 8+ characters, contain 1 uppercase, 1 lowercase, and 1 number.
+          </small>
+        </div>
+        <button type="submit" id="auth-submit-btn" style="width: 100%;">Sign In</button>
+      </form>
+
+      <p style="margin-top: 1rem; text-align: center; font-size: 0.9rem;">
+        <span id="auth-toggle-text">Don't have an account?</span>
+        <a href="#" id="auth-toggle-link" style="color: var(--primary);">Sign Up</a>
+      </p>
+
+      <div class="divider"><span>OR</span></div>
+
+      <button class="github-btn" id="github-signin-btn">Continue with GitHub</button>
+    </div>
+
+    <!-- Screen 2: Username Setup Screen -->
+    <div id="username-screen" class="screen">
+      <h2>Welcome! Choose a Username</h2>
+      <p style="margin-bottom: 1rem; color: #64748b;">
+        Set up a unique username to display on your shared study guides.
+      </p>
+      <form id="username-form">
+        <div class="form-group">
+          <label for="username-input">Username</label>
+          <input type="text" id="username-input" required placeholder="e.g. PhysicsAce">
+        </div>
+        <button type="submit">Save Username</button>
+      </form>
+    </div>
+
+    <!-- Screen 3: Main Dashboard Screen -->
+    <div id="dashboard-screen" class="screen">
+      <h2>Study Notes Dashboard</h2>
+      
+      <section style="margin-bottom: 2rem; background: #f1f5f9; padding: 1.5rem; border-radius: 6px;">
+        <h3 style="margin-bottom: 1rem;">Upload Study Note</h3>
+        <form id="upload-form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="class-title">Class Title</label>
+              <input type="text" id="class-title" placeholder="e.g. AP Physics 1" required>
+            </div>
+            <div class="form-group">
+              <label for="topic-unit">Topic / Unit</label>
+              <input type="text" id="topic-unit" placeholder="e.g. Unit 3: Kinematics" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="note-description">Description</label>
+            <textarea id="note-description" rows="2" placeholder="Brief description of notes..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="note-file">File (PDF, PNG, JPG - Max 50MB)</label>
+            <input type="file" id="note-file" accept=".pdf,.png,.jpg,.jpeg" required>
+          </div>
+          <div class="form-group checkbox-group">
+            <input type="checkbox" id="is-public" checked>
+            <label for="is-public" style="margin-bottom:0;">Make public to all students</label>
+          </div>
+          <button type="submit" id="upload-btn">Upload Note</button>
+        </form>
+      </section>
+
+      <div class="tabs">
+        <div class="tab active" id="tab-public">Public Study Guides</div>
+        <div class="tab" id="tab-private">My Private Notes</div>
+      </div>
+
+      <div id="public-notes-section">
+        <div id="public-notes-list" class="notes-grid"></div>
+      </div>
+
+      <div id="private-notes-section" style="display: none;">
+        <div id="private-notes-list" class="notes-grid"></div>
+      </div>
+    </div>
+
+    <!-- Screen 4: Settings / Change Password Screen -->
+    <div id="settings-screen" class="screen">
+      <h2>Account Settings</h2>
+      
+      <div id="change-password-box">
+        <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Change Password</h3>
+        <form id="change-password-form">
+          <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" required placeholder="••••••••">
+            <small style="color: #64748b;">Must be 8+ characters, contain 1 uppercase, 1 lowercase, and 1 number.</small>
+          </div>
+          <button type="submit">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
