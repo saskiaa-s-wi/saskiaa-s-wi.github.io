@@ -1,4 +1,4 @@
-# AP Physics Study Notes Hub
+# Study Notes Hub
 Build 2 plan: CONFIRMED by Build 2 Planner on September 29, 2026.
 
 ## What the app does and who it's for
