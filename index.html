@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MelodyArcade - Music & Games Hub</title>
+    <title>PlayCentral - Music, Games & Study Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -41,6 +41,9 @@
                     <a href="memory-game/index.html" class="px-4 py-2 rounded-2xl text-base font-semibold text-[#8C7A6B] hover:text-[#5C4B51] hover:bg-[#FFE5D9]/50 transition-colors">
                         <i class="fa-solid fa-gamepad mr-1 sm:mr-2 text-[#E29578]"></i>Memory Game
                     </a>
+                    <a href="study-plans/index.html" class="px-4 py-2 rounded-2xl text-base font-semibold text-[#8C7A6B] hover:text-[#5C4B51] hover:bg-[#FFE5D9]/50 transition-colors">
+                        <i class="fa-solid fa-graduation-cap mr-1 sm:mr-2 text-[#6B8A7A]"></i>Study Hub
+                    </a>
                 </nav>
             </div>
         </div>
@@ -52,16 +55,16 @@
             <div class="max-w-5xl w-full text-center space-y-8">
                 <div class="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#FFE5D9] border border-[#FEC89A] text-[#8C7A6B] text-base font-medium mb-2 shadow-sm">
                     <span class="flex h-2.5 w-2.5 rounded-full bg-[#E29578] animate-pulse"></span>
-                    <span>Games & Music Hub</span>
+                    <span>Music, Games & Study Hub</span>
                 </div>
                 
                 <h1 class="text-4xl sm:text-6xl font-bold text-[#5C4B51] tracking-wide leading-relaxed">
-                    Discover Music & Play <br class="hidden sm:inline">
-                    <span class="text-[#E29578] bg-[#FFE5D9]/60 px-4 py-1 rounded-2xl inline-block mt-1">Fun Memory Games</span>
+                    Discover Music, Play Games <br class="hidden sm:inline">
+                    <span class="text-[#E29578] bg-[#FFE5D9]/60 px-4 py-1 rounded-2xl inline-block mt-1">& Share Study Notes</span>
                 </h1>
                 
                 <p class="max-w-2xl mx-auto text-[#8C7A6B] text-lg sm:text-xl leading-relaxed">
-                    Welcome to PlayCentral! Share your favorite songs by genre or challenge your recall skills with our memory matching game.
+                    Welcome to PlayCentral! Share your favorite songs, challenge your memory skills, or upload and browse study plans and course notes across all subjects.
                 </p>
 
                 <div class="pt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-center">
@@ -98,22 +101,41 @@
                         </a>
                     </div>
 
-                    <!-- Instructions Card -->
-                    <div class="bg-[#FFF8F0] border-2 border-[#E8D8CE] rounded-3xl p-6 text-left shadow-sm flex flex-col justify-between md:col-span-2 lg:col-span-1">
+                    <!-- Study Hub Card -->
+                    <div class="bg-[#FFF8F0] border-2 border-[#E8D8CE] hover:border-[#6B8A7A] rounded-3xl p-6 transition-all duration-300 hover:-translate-y-1 shadow-sm hover:shadow-md text-left group flex flex-col justify-between">
                         <div>
-                            <div class="w-12 h-12 rounded-2xl bg-[#FEC89A]/40 border border-[#FEC89A] flex items-center justify-center text-[#E29578] mb-4">
-                                <i class="fa-solid fa-lightbulb text-2xl"></i>
+                            <div class="w-12 h-12 rounded-2xl bg-[#D8E2DC] border border-[#C5D3CB] flex items-center justify-center text-[#6B8A7A] mb-4 group-hover:bg-[#6B8A7A] group-hover:text-white transition-all">
+                                <i class="fa-solid fa-graduation-cap text-2xl"></i>
                             </div>
-                            <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">What You Can Do</h2>
-                            <ul class="text-[#8C7A6B] text-base space-y-2 mb-4">
-                                <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Discover songs by Pop, R&B, Rock & more</li>
-                                <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Share song recommendations with short notes</li>
-                                <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Challenge friends in memory card flipping</li>
-                            </ul>
+                            <h2 class="text-2xl font-bold text-[#5C4B51] mb-2">Study Hub</h2>
+                            <p class="text-[#8C7A6B] text-base mb-6 leading-normal">Upload, view, and organize study guides, plans, and notes for any subject or course!</p>
                         </div>
+                        
+                        <a href="study-plans/index.html" class="w-full py-3 px-5 rounded-2xl bg-[#6B8A7A] hover:bg-[#5A7869] text-white text-lg font-semibold transition-colors flex items-center justify-center space-x-2 shadow-sm">
+                            <span>Open Study Hub</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
                     </div>
 
                 </div>
+
+                <!-- What You Can Do Section -->
+                <div class="pt-4 max-w-2xl mx-auto">
+                    <div class="bg-[#FFF8F0] border-2 border-[#E8D8CE] rounded-3xl p-6 text-left shadow-sm">
+                        <div class="flex items-center space-x-3 mb-3">
+                            <div class="w-10 h-10 rounded-2xl bg-[#FEC89A]/40 border border-[#FEC89A] flex items-center justify-center text-[#E29578]">
+                                <i class="fa-solid fa-lightbulb text-xl"></i>
+                            </div>
+                            <h2 class="text-2xl font-bold text-[#5C4B51]">What You Can Do</h2>
+                        </div>
+                        <ul class="text-[#8C7A6B] text-base space-y-2">
+                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Discover songs by Pop, R&B, Rock & more</li>
+                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Challenge friends in memory card matching</li>
+                            <li class="flex items-start"><i class="fa-solid fa-heart text-[#E29578] mt-1.5 mr-2 text-xs"></i>Store and share study notes & plans securely</li>
+                        </ul>
+                    </div>
+                </div>
+
             </div>
         </section>
 
