@@ -66,15 +66,16 @@ An app for students to upload, share, and access study guides and handwritten no
 - GitHub client secret: configured directly in Supabase Dashboard under Authentication -> Providers -> GitHub (never stored in code or project.md).
 
 ## Where we are right now
-Initial code structure created for `index.html`, `app.js`, and `config.js`.
+Configured Supabase credentials in `config.js` and implemented full application logic across `index.html` and `app.js`, including Email/Password and GitHub authentication, username setup, study material uploads to `notes_bucket`, public/private dashboard views, password updates, and note deletion with storage cleanup.
 
 ## NOT doing, on purpose
 - Forgot password email resets and email confirmation emails (Supabase free tier limits external email delivery).
 - AI summarization or automated flashcard generation (reserved for Build 4).
 
 ## Next thing I want to add
-Set up Supabase URL and publishable key in `config.js`, configure Supabase Auth settings, and test email/password & GitHub sign-in flows.
+Deploy the three application files (`index.html`, `app.js`, `config.js`) to GitHub Pages, fill in the GitHub Pages URL, and test the live application end-to-end.
 
 ## Change log
 - September 29, 2026: Planning session with Build 2 Planner. Plan confirmed.
 - October 4, 2026: Initial setup of `index.html`, `app.js`, and `config.js`.
+- October 6, 2026: Configured Supabase URL and publishable key in `config.js`. Built all 4 application screens in `index.html` and implemented complete JavaScript logic in `app.js` (Auth, Username profile setup, Storage uploads, Dashboard tabs, Password management, and Modal deletion).
