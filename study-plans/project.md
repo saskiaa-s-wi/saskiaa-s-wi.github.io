@@ -2,7 +2,7 @@
 Build 2 plan: CONFIRMED by Build 2 Planner on September 29, 2026.
 
 ## What the app does and who it's for
-An app for AP Physics students (including test users Areej, Mariam, and Hania) to upload, share, and access study guides and handwritten notes (PDFs, PNGs, JPGs). It saves students time and effort creating study guides from scratch and keeps essential course materials stored securely in one place.
+An app for students to upload, share, and access study guides and handwritten notes (PDFs, PNGs, JPGs). It saves students time and effort creating study guides from scratch and keeps essential course materials stored securely in one place.
 
 ## Sign-in
 - Email + Password sign-in (enforced rules: 8+ characters, at least 1 uppercase letter, 1 lowercase letter, and 1 number).
