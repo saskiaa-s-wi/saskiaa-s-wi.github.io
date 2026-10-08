@@ -32,6 +32,9 @@ const passwordHint = document.getElementById("password-hint");
 const githubSigninBtn = document.getElementById("github-signin-btn");
 const authMsg = document.getElementById("auth-msg");
 
+const authTabSignin = document.getElementById("auth-tab-signin");
+const authTabSignup = document.getElementById("auth-tab-signup");
+
 const usernameForm = document.getElementById("username-form");
 const usernameInput = document.getElementById("username-input");
 
@@ -135,25 +138,44 @@ async function handleAuthState(session) {
   }
 }
 
-// Toggle Sign-In / Sign-Up Mode
+// Auth Mode Switcher (Sign In vs Create Account)
+function setAuthMode(signUp) {
+  isSignUpMode = signUp;
+  clearMsg();
+
+  if (isSignUpMode) {
+    if (authTabSignin) authTabSignin.classList.remove("active");
+    if (authTabSignup) authTabSignup.classList.add("active");
+    if (authTitle) authTitle.innerText = "Create Account";
+    if (authSubmitBtn) authSubmitBtn.innerText = "Create Account";
+    if (authToggleText) authToggleText.innerText = "Already have an account?";
+    if (authToggleLink) authToggleLink.innerText = "Sign In";
+    if (passwordHint) passwordHint.style.display = "block";
+  } else {
+    if (authTabSignup) authTabSignup.classList.remove("active");
+    if (authTabSignin) authTabSignin.classList.add("active");
+    if (authTitle) authTitle.innerText = "Sign In";
+    if (authSubmitBtn) authSubmitBtn.innerText = "Sign In";
+    if (authToggleText) authToggleText.innerText = "Don't have an account?";
+    if (authToggleLink) authToggleLink.innerText = "Create Account";
+    if (passwordHint) passwordHint.style.display = "none";
+  }
+}
+
+// Tab Click Handlers for Auth Screen
+if (authTabSignin) {
+  authTabSignin.addEventListener("click", () => setAuthMode(false));
+}
+
+if (authTabSignup) {
+  authTabSignup.addEventListener("click", () => setAuthMode(true));
+}
+
+// Bottom Toggle Link
 if (authToggleLink) {
   authToggleLink.addEventListener("click", (e) => {
     e.preventDefault();
-    isSignUpMode = !isSignUpMode;
-    clearMsg();
-    if (isSignUpMode) {
-      if (authTitle) authTitle.innerText = "Sign Up";
-      if (authSubmitBtn) authSubmitBtn.innerText = "Create Account";
-      if (authToggleText) authToggleText.innerText = "Already have an account?";
-      if (authToggleLink) authToggleLink.innerText = "Sign In";
-      if (passwordHint) passwordHint.style.display = "block";
-    } else {
-      if (authTitle) authTitle.innerText = "Sign In";
-      if (authSubmitBtn) authSubmitBtn.innerText = "Sign In";
-      if (authToggleText) authToggleText.innerText = "Don't have an account?";
-      if (authToggleLink) authToggleLink.innerText = "Sign Up";
-      if (passwordHint) passwordHint.style.display = "none";
-    }
+    setAuthMode(!isSignUpMode);
   });
 }
 
@@ -176,8 +198,11 @@ if (authForm) {
       if (error) {
         showMsg(error.message);
       } else {
-        showMsg("Account created successfully! You can now log in.", false);
-        authToggleLink.click();
+        showMsg("Account created successfully! Switching to sign in...", false);
+        setTimeout(() => {
+          setAuthMode(false);
+          showMsg("Account created! Please sign in with your credentials.", false);
+        }, 1200);
       }
     } else {
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
