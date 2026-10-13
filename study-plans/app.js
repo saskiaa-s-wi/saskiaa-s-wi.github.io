@@ -3,11 +3,18 @@
 // Initialize Supabase Client
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Bucket Configuration
+const BUCKET_NAME = 'user-files';
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
+
+// Allowed file extensions and mime-types
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'ogg', 'mov', 'mp3', 'wav', 'pdf', 'docx'];
+
 // Application State Variables
 let isSignUpMode = false;
 let currentUser = null;
 let noteToDeleteId = null;
-let noteToDeleteFileUrl = null;
+let noteToDeleteFilePath = null;
 
 // DOM Element References
 const authScreen = document.getElementById("auth-screen");
@@ -36,6 +43,11 @@ const usernameForm = document.getElementById("username-form");
 const usernameInput = document.getElementById("username-input");
 
 const uploadForm = document.getElementById("upload-form");
+const uploadBtn = document.getElementById("upload-btn");
+const progressContainer = document.getElementById("progress-container");
+const uploadProgressBar = document.getElementById("upload-progress-bar");
+const uploadProgressText = document.getElementById("upload-progress-text");
+
 const tabPublic = document.getElementById("tab-public");
 const tabPrivate = document.getElementById("tab-private");
 const publicNotesSection = document.getElementById("public-notes-section");
@@ -50,7 +62,7 @@ const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
 
-// Password Rule: 8+ chars, 1 uppercase, 1 lowercase, 1 number
+// Password Rule Validation
 function validatePassword(password) {
   const minLength = password.length >= 8;
   const hasUpper = /[A-Z]/.test(password);
@@ -59,21 +71,31 @@ function validatePassword(password) {
   return minLength && hasUpper && hasLower && hasNumber;
 }
 
-// Display Toast Message
+// Format bytes into readable string
+function formatBytes(bytes, decimals = 2) {
+  if (!bytes || bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+}
+
+// Display Message Banner
 function showMsg(text, isError = true) {
   if (!authMsg) return;
   authMsg.innerText = text;
   authMsg.className = `message ${isError ? 'error' : 'success'}`;
 }
 
-// Clear Toast Message
+// Clear Message Banner
 function clearMsg() {
   if (!authMsg) return;
   authMsg.innerText = "";
   authMsg.className = "message";
 }
 
-// Switch Screen View
+// Switch Active Screen
 function showScreen(screen) {
   if (!screen) return;
   if (authScreen) authScreen.classList.remove("active");
@@ -84,6 +106,7 @@ function showScreen(screen) {
   screen.classList.add("active");
 }
 
+// Application Initialization
 async function initApp() {
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -93,10 +116,11 @@ async function initApp() {
       await handleAuthState(session);
     });
   } catch (err) {
-    console.error("Initialization error:", err);
+    showMsg(err.message || "Failed to initialize authentication.");
   }
 }
 
+// Handle Auth State Changes
 async function handleAuthState(session) {
   clearMsg();
   if (!session) {
@@ -109,7 +133,7 @@ async function handleAuthState(session) {
   currentUser = session.user;
   if (navActions) navActions.style.display = "flex";
 
-  // Check if profile exists for current user
+  // Check if profile row exists for current user
   const { data: profile, error } = await supabaseClient
     .from("profiles")
     .select("username")
@@ -121,7 +145,7 @@ async function handleAuthState(session) {
   } else {
     if (userDisplay) userDisplay.innerText = `@${profile.username}`;
     
-    // Hide password change UI for OAuth users
+    // Hide password change box for OAuth users
     if (currentUser.app_metadata && currentUser.app_metadata.provider === "github") {
       if (changePasswordBox) changePasswordBox.style.display = "none";
     } else {
@@ -202,7 +226,7 @@ if (githubSigninBtn) {
   });
 }
 
-// Username Form Submit
+// First-time Username Form Handler
 if (usernameForm) {
   usernameForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -211,21 +235,40 @@ if (usernameForm) {
     const username = usernameInput.value.trim();
     if (!username) return;
 
+    // Check if username already exists in profiles
+    const { data: existingUser, error: checkError } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("username", username)
+      .maybeSingle();
+
+    if (checkError) {
+      showMsg(`Error checking username: ${checkError.message}`);
+      return;
+    }
+
+    if (existingUser && existingUser.id !== currentUser.id) {
+      showMsg("This username is already taken. Please choose another one.");
+      return;
+    }
+
+    // Upsert user profile row
     const { error } = await supabaseClient
       .from("profiles")
       .upsert({ id: currentUser.id, username: username, created_at: new Date() });
 
     if (error) {
-      showMsg(error.message.includes("unique") ? "Username is already taken." : error.message);
+      showMsg(error.message.includes("unique") ? "Username is already taken. Please try another." : error.message);
     } else {
       if (userDisplay) userDisplay.innerText = `@${username}`;
+      showMsg("Username saved successfully!", false);
       showScreen(dashboardScreen);
       loadDashboardNotes();
     }
   });
 }
 
-// Navigation Buttons
+// Navigation Listeners
 if (navDashboardBtn) {
   navDashboardBtn.addEventListener("click", () => {
     showScreen(dashboardScreen);
@@ -245,7 +288,7 @@ if (signoutBtn) {
   });
 }
 
-// Change Password Form
+// Change Password Handler
 if (changePasswordForm) {
   changePasswordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -268,7 +311,7 @@ if (changePasswordForm) {
   });
 }
 
-// Dashboard Tabs
+// Dashboard Tab Switching
 if (tabPublic && tabPrivate) {
   tabPublic.addEventListener("click", () => {
     tabPublic.classList.add("active");
@@ -285,7 +328,7 @@ if (tabPublic && tabPrivate) {
   });
 }
 
-// Upload Study Material Form
+// Upload Form Handler with Real Progress & Validation
 if (uploadForm) {
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -303,134 +346,244 @@ if (uploadForm) {
       return;
     }
 
-    // File type validation
-    const allowedExtensions = ['pdf', 'png', 'jpg', 'jpeg'];
+    // 1. Client-side File Type Check
     const fileExt = file.name.split('.').pop().toLowerCase();
-    if (!allowedExtensions.includes(fileExt)) {
-      showMsg("Invalid file type. Please upload a PDF, PNG, or JPG file.");
+    const isMimeVideo = file.type.startsWith('video/');
+    const isMimeAudio = file.type.startsWith('audio/');
+    
+    if (!ALLOWED_EXTENSIONS.includes(fileExt) && !isMimeVideo && !isMimeAudio) {
+      showMsg("Invalid file type. Allowed formats: JPG, PNG, WEBP, GIF, video, audio, PDF, and Word (.docx).");
       return;
     }
 
-    // Validate File Size (Max 50MB)
-    if (file.size > 50 * 1024 * 1024) {
-      showMsg("File size exceeds 50MB limit.");
+    // 2. Client-side File Size Check (10MB limit)
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      showMsg(`File size exceeds 10 MB limit. Your file is ${formatBytes(file.size)}.`);
       return;
     }
 
-    // Upload File to notes_bucket
-    const filePath = `${currentUser.id}/${Date.now()}.${fileExt}`;
+    // Clean filename and structure destination path: [user id]/[timestamp]-[file name]
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = `${currentUser.id}/${Date.now()}-${cleanFileName}`;
 
-    const { error: uploadError } = await supabaseClient.storage
-      .from("notes_bucket")
-      .upload(filePath, file);
+    // Disable button & setup progress UI
+    if (uploadBtn) uploadBtn.disabled = true;
+    if (progressContainer) progressContainer.style.display = "block";
+    if (uploadProgressBar) uploadProgressBar.value = 0;
+    if (uploadProgressText) uploadProgressText.innerText = "0%";
 
-    if (uploadError) {
-      showMsg(`Upload failed: ${uploadError.message}`);
-      return;
-    }
+    try {
+      // Upload file with REAL progress reporting via Supabase Storage Options
+      const { data: storageData, error: uploadError } = await supabaseClient.storage
+        .from(BUCKET_NAME)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+          onUploadProgress: (progress) => {
+            if (progress.total > 0) {
+              const percent = Math.round((progress.loaded / progress.total) * 100);
+              if (uploadProgressBar) uploadProgressBar.value = percent;
+              if (uploadProgressText) uploadProgressText.innerText = `${percent}% uploaded`;
+            }
+          }
+        });
 
-    // Get Public File URL
-    const { data: urlData } = supabaseClient.storage
-      .from("notes_bucket")
-      .getPublicUrl(filePath);
+      if (uploadError) {
+        showMsg(`Upload failed: ${uploadError.message}`);
+        return;
+      }
 
-    // Insert Record in study_notes table
-    const { error: dbError } = await supabaseClient
-      .from("study_notes")
-      .insert({
-        user_id: currentUser.id,
-        class_title: classTitle,
-        topic_unit: topicUnit,
-        description: description,
-        file_url: urlData.publicUrl,
-        is_public: isPublic,
-        created_at: new Date()
-      });
+      // Save record in database
+      const { error: dbError } = await supabaseClient
+        .from("study_notes")
+        .insert({
+          user_id: currentUser.id,
+          class_title: classTitle,
+          topic_unit: topicUnit,
+          description: description,
+          file_url: filePath, // Storing file path in bucket
+          file_name: file.name,
+          file_size: file.size,
+          is_public: isPublic,
+          created_at: new Date()
+        });
 
-    if (dbError) {
-      showMsg(`Failed to save record: ${dbError.message}`);
-    } else {
-      showMsg("Study material uploaded successfully!", false);
-      uploadForm.reset();
-      loadDashboardNotes();
+      if (dbError) {
+        showMsg(`Failed to save record: ${dbError.message}`);
+      } else {
+        showMsg("File uploaded successfully!", false);
+        uploadForm.reset();
+        loadDashboardNotes();
+      }
+    } catch (err) {
+      showMsg(`Upload failed: ${err.message || err}`);
+    } finally {
+      if (uploadBtn) uploadBtn.disabled = false;
+      if (progressContainer) progressContainer.style.display = "none";
     }
   });
 }
 
-// Load Dashboard Notes & Plans
+// Fetch Signed/Public URL for a storage file path
+async function getFileAccessUrl(filePath) {
+  if (!filePath) return "";
+  
+  // Try Signed URL first (for private bucket setups)
+  const { data: signedData, error: signedError } = await supabaseClient.storage
+    .from(BUCKET_NAME)
+    .createSignedUrl(filePath, 3600); // 1 hour validity
+
+  if (!signedError && signedData?.signedUrl) {
+    return signedData.signedUrl;
+  }
+
+  // Fallback to Public URL
+  const { data: publicData } = supabaseClient.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(filePath);
+
+  return publicData?.publicUrl || "";
+}
+
+// Load Dashboard Items
 async function loadDashboardNotes() {
-  // Fetch profiles map for author names
-  const { data: profiles } = await supabaseClient.from("profiles").select("id, username");
+  // Fetch profiles map for user author display
+  const { data: profiles, error: profilesError } = await supabaseClient.from("profiles").select("id, username");
+  if (profilesError) {
+    showMsg(`Error loading profiles: ${profilesError.message}`);
+  }
+  
   const profileMap = {};
   if (profiles) {
     profiles.forEach(p => { profileMap[p.id] = p.username; });
   }
 
-  // Fetch Public Notes
-  const { data: publicNotes } = await supabaseClient
+  // Fetch Public Records
+  const { data: publicNotes, error: publicError } = await supabaseClient
     .from("study_notes")
     .select("*")
     .eq("is_public", true)
     .order("created_at", { ascending: false });
 
-  if (publicNotesList) renderNotes(publicNotes || [], publicNotesList, profileMap);
+  if (publicError) showMsg(`Error loading public materials: ${publicError.message}`);
 
-  // Fetch User's Private Notes
-  const { data: privateNotes } = await supabaseClient
+  // Fetch Private Records
+  const { data: privateNotes, error: privateError } = await supabaseClient
     .from("study_notes")
     .select("*")
     .eq("user_id", currentUser.id)
     .eq("is_public", false)
     .order("created_at", { ascending: false });
 
-  if (privateNotesList) renderNotes(privateNotes || [], privateNotesList, profileMap);
+  if (privateError) showMsg(`Error loading private materials: ${privateError.message}`);
+
+  if (publicNotesList) await renderNotes(publicNotes || [], publicNotesList, profileMap);
+  if (privateNotesList) await renderNotes(privateNotes || [], privateNotesList, profileMap);
 }
 
-// Render Notes Cards
-function renderNotes(notes, container, profileMap) {
+// Render Media Element based on file extension
+function buildMediaMarkup(fileUrl, fileName) {
+  const ext = (fileName || fileUrl).split('.').pop().split('?')[0].toLowerCase();
+
+  // Images
+  if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+    return `
+      <div class="media-preview">
+        <img src="${fileUrl}" alt="${escapeHtml(fileName)}" loading="lazy">
+      </div>`;
+  }
+
+  // Videos
+  if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
+    return `
+      <div class="media-preview">
+        <video controls preload="metadata">
+          <source src="${fileUrl}">
+          Your browser does not support video playback.
+        </video>
+      </div>`;
+  }
+
+  // Audio
+  if (['mp3', 'wav'].includes(ext)) {
+    return `
+      <div class="media-preview">
+        <audio controls preload="metadata">
+          <source src="${fileUrl}">
+          Your browser does not support audio playback.
+        </audio>
+      </div>`;
+  }
+
+  // PDF & Word Document Link
+  return `
+    <div style="margin-bottom: 0.75rem;">
+      <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" class="file-link">
+        📄 View / Download ${escapeHtml(fileName || 'Document')}
+      </a>
+    </div>`;
+}
+
+// Render Notes & Files Cards
+async function renderNotes(notes, container, profileMap) {
   if (notes.length === 0) {
     container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;">No materials found.</p>`;
     return;
   }
 
-  container.innerHTML = notes.map(note => {
+  const cardsHtml = await Promise.all(notes.map(async (note) => {
     const isOwner = note.user_id === currentUser.id;
     const author = profileMap[note.user_id] ? `@${profileMap[note.user_id]}` : "Unknown";
     
+    // Resolve access URL (signed URL for private bucket or fallback)
+    const fileUrl = await getFileAccessUrl(note.file_url);
+    const fileName = note.file_name || note.file_url.split('/').pop();
+    const mediaMarkup = buildMediaMarkup(fileUrl, fileName);
+    const formattedSize = note.file_size ? formatBytes(note.file_size) : '';
+
     return `
       <div class="note-card">
         <div>
           <span class="badge">${escapeHtml(note.class_title)}</span>
           <h3>${escapeHtml(note.topic_unit)}</h3>
           <p>${escapeHtml(note.description || 'No description provided.')}</p>
+
+          ${mediaMarkup}
+
+          <div style="margin-bottom: 0.75rem;">
+            <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(fileName)}</div>
+            ${formattedSize ? `<div class="file-size">Size: ${formattedSize}</div>` : ''}
+          </div>
         </div>
         <div>
           <div class="meta">Uploaded by <strong>${escapeHtml(author)}</strong></div>
           <div class="actions">
-            <a href="${note.file_url}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-              <button type="button" class="secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem;">View File</button>
+            <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+              <button type="button" class="secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Open File</button>
             </a>
             ${isOwner ? `
-              <button type="button" class="danger" onclick="openDeleteModal('${note.id}', '${note.file_url}')" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Delete</button>
+              <button type="button" class="danger" onclick="openDeleteModal('${note.id}', '${escapeHtml(note.file_url)}')" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Delete</button>
             ` : ''}
           </div>
         </div>
       </div>
     `;
-  }).join('');
+  }));
+
+  container.innerHTML = cardsHtml.join('');
 }
 
-// Open Custom Delete Modal
-window.openDeleteModal = function(noteId, fileUrl) {
+// Open Delete Confirmation Modal
+window.openDeleteModal = function(noteId, filePath) {
   noteToDeleteId = noteId;
-  noteToDeleteFileUrl = fileUrl;
+  noteToDeleteFilePath = filePath;
   if (deleteModal) deleteModal.classList.add("active");
 };
 
-// Close Delete Modal
+// Close Delete Confirmation Modal
 function closeDeleteModal() {
   noteToDeleteId = null;
-  noteToDeleteFileUrl = null;
+  noteToDeleteFilePath = null;
   if (deleteModal) deleteModal.classList.remove("active");
 }
 
@@ -438,28 +591,29 @@ if (cancelDeleteBtn) {
   cancelDeleteBtn.addEventListener("click", closeDeleteModal);
 }
 
-// Confirm Delete Handler
+// Confirm Delete Event Handler
 if (confirmDeleteBtn) {
   confirmDeleteBtn.addEventListener("click", async () => {
     if (!noteToDeleteId) return;
 
-    // Delete DB entry
+    // Delete DB record
     const { error: dbError } = await supabaseClient
       .from("study_notes")
       .delete()
       .eq("id", noteToDeleteId);
 
     if (dbError) {
-      showMsg(`Failed to delete material: ${dbError.message}`);
+      showMsg(`Failed to delete record: ${dbError.message}`);
     } else {
-      // Attempt to delete file from storage bucket
+      // Remove file from storage bucket
       try {
-        if (noteToDeleteFileUrl) {
-          const urlObj = new URL(noteToDeleteFileUrl);
-          const pathParts = urlObj.pathname.split("/notes_bucket/");
-          if (pathParts[1]) {
-            const filePath = decodeURIComponent(pathParts[1]);
-            await supabaseClient.storage.from("notes_bucket").remove([filePath]);
+        if (noteToDeleteFilePath) {
+          const { error: storageDeleteError } = await supabaseClient.storage
+            .from(BUCKET_NAME)
+            .remove([noteToDeleteFilePath]);
+
+          if (storageDeleteError) {
+            console.warn("Storage removal note:", storageDeleteError.message);
           }
         }
       } catch (e) {
@@ -474,12 +628,12 @@ if (confirmDeleteBtn) {
   });
 }
 
-// Utility to prevent XSS
+// Helper to sanitize text output against XSS
 function escapeHtml(str) {
-  return String(str).replace(/[&<>"']/g, (m) => {
+  return String(str || '').replace(/[&<>"']/g, (m) => {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
 }
 
-// Kick off app initialization
+// Start App
 initApp();
