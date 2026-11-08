@@ -1,13 +1,13 @@
 // app.js - Universal Study Notes & Plans Hub Application Logic
 
 // Initialize Supabase Client
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function saveProfile(usernameInput) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
+ const { data: { user } } = await supabase.auth.getUser();
   if (!user) return alert('User not logged in');
 
-  const { data, error } = await supabaseClient
+ const { data, error } = await supabase.from('profiles').upsert({ ... });
     .from('profiles')
     .upsert({
       id: user.id,
