@@ -3,6 +3,24 @@
 // Initialize Supabase Client
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+async function saveProfile(usernameInput) {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return alert('User not logged in');
+
+  const { data, error } = await supabaseClient
+    .from('profiles')
+    .upsert({
+      id: user.id,
+      username: usernameInput,
+    });
+
+  if (error) {
+    alert('Error saving username: ' + error.message);
+  } else {
+    window.location.reload();
+  }
+}
+
 // Bucket Configuration
 const BUCKET_NAME = 'user-files';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
@@ -134,11 +152,11 @@ async function handleAuthState(session) {
   if (navActions) navActions.style.display = "flex";
 
   // Check if profile row exists for current user
-  const { data: profile, error } = await supabaseClient
-    .from("profiles")
-    .select("username")
-    .eq("id", currentUser.id)
-    .single();
+  const { data, error } = await supabase
+  .from('profiles')
+  .select('username')
+  .eq('id', user.id)
+  .maybeSingle();
 
   if (error || !profile || !profile.username) {
     showScreen(usernameScreen);
