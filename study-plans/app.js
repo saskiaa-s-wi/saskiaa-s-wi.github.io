@@ -5,10 +5,10 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 var supabase = supabaseClient;
 
 async function saveProfile(usernameInput) {
- const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabaseClient.auth.getUser();
   if (!user) return alert('User not logged in');
 
- const { data, error } = await supabase.from('profiles').upsert({ ... });
+  const { data, error } = await supabaseClient
     .from('profiles')
     .upsert({
       id: user.id,
@@ -20,7 +20,6 @@ async function saveProfile(usernameInput) {
   } else {
     window.location.reload();
   }
-}
 
 // Bucket Configuration
 const BUCKET_NAME = 'user-files';
