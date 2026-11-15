@@ -20,6 +20,7 @@ async function saveProfile(usernameInput) {
   } else {
     window.location.reload();
   }
+}
 
 // Bucket Configuration
 const BUCKET_NAME = 'user-files';
