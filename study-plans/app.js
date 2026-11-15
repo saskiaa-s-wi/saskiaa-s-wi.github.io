@@ -153,11 +153,11 @@ async function handleAuthState(session) {
   if (navActions) navActions.style.display = "flex";
 
   // Check if profile row exists for current user
-  const { data, error } = await supabase
-  .from('profiles')
-  .select('username')
-  .eq('id', user.id)
-  .maybeSingle();
+  const { data: profile, error } = await supabaseClient
+    .from('profiles')
+    .select('username')
+    .eq('id', currentUser.id)
+    .maybeSingle();
 
   if (error || !profile || !profile.username) {
     showScreen(usernameScreen);
