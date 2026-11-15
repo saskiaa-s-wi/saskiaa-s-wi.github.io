@@ -58,7 +58,7 @@ const githubSigninBtn = document.getElementById("github-signin-btn");
 const authMsg = document.getElementById("auth-msg");
 
 const usernameForm = document.getElementById("username-form");
-const usernameInput = document.getElementById("username-input");
+const usernameField = document.getElementById("username-input");
 
 const uploadForm = document.getElementById("upload-form");
 const uploadBtn = document.getElementById("upload-btn");
@@ -250,7 +250,7 @@ if (usernameForm) {
     e.preventDefault();
     clearMsg();
 
-    const username = usernameInput.value.trim();
+    const username = usernameField.value.trim();
     if (!username) return;
 
     // Check if username already exists in profiles
