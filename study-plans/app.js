@@ -654,5 +654,4 @@ function escapeHtml(str) {
   });
 }
 
-// Start App
 initApp();
