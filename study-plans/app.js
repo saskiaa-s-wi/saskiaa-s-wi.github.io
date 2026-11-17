@@ -32,6 +32,7 @@ const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 
 // Application State Variables
 let isSignUpMode = false;
 let currentUser = null;
+let isAdmin = false;
 let noteToDeleteId = null;
 let noteToDeleteFilePath = null;
 
@@ -150,6 +151,18 @@ async function handleAuthState(session) {
   }
 
   currentUser = session.user;
+  // CHECK IF ADMIN
+    const { data: adminData } = await supabaseClient
+      .from('admins')
+      .select('user_id')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+
+    if (adminData) {
+      isAdmin = true;
+    } else {
+      isAdmin = false;
+    }
   if (navActions) navActions.style.display = "flex";
 
   // Check if profile row exists for current user
@@ -551,7 +564,7 @@ async function renderNotes(notes, container, profileMap) {
   }
 
   const cardsHtml = await Promise.all(notes.map(async (note) => {
-    const isOwner = note.user_id === currentUser.id;
+    const isOwner = note.user_id === currentUser.id || isAdmin;
     const author = profileMap[note.user_id] ? `@${profileMap[note.user_id]}` : "Unknown";
     
     // Resolve access URL (signed URL for private bucket or fallback)
