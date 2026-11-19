@@ -1,4 +1,4 @@
-/ app.js - Study Notes Hub Application Logic
+// app.js - Study Notes Hub Application Logic
 // Roles: every account is a "user". The admin (set by email in Supabase) can make
 // users into moderators. Moderators and the admin can delete any PUBLIC note.
 // The database enforces all of this. The checks in this file only decide which
