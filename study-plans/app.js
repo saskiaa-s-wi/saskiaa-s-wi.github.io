@@ -1,52 +1,47 @@
-// app.js - Universal Study Notes & Plans Hub Application Logic
+/ app.js - Study Notes Hub Application Logic
+// Roles: every account is a "user". The admin (set by email in Supabase) can make
+// users into moderators. Moderators and the admin can delete any PUBLIC note.
+// The database enforces all of this. The checks in this file only decide which
+// buttons to show.
 
-// Initialize Supabase Client
+
+// Initialize Supabase Client (SUPABASE_URL and SUPABASE_ANON_KEY come from config.js)
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-var supabase = supabaseClient;
 
-async function saveProfile(usernameInput) {
-  const { data: { user } } = await supabaseClient.auth.getUser();
-  if (!user) return alert('User not logged in');
-
-  const { data, error } = await supabaseClient
-    .from('profiles')
-    .upsert({
-      id: user.id,
-      username: usernameInput,
-    });
-
-  if (error) {
-    alert('Error saving username: ' + error.message);
-  } else {
-    window.location.reload();
-  }
-}
 
 // Bucket Configuration
 const BUCKET_NAME = 'user-files';
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB limit
 
-// Allowed file extensions and mime-types
+
+// Allowed file extensions
 const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'ogg', 'mov', 'mp3', 'wav', 'pdf', 'docx'];
+
 
 // Application State Variables
 let isSignUpMode = false;
 let currentUser = null;
-let isAdmin = false;
+let currentRole = 'user'; // 'user', 'moderator' or 'admin' (read from the profiles table)
 let noteToDeleteId = null;
 let noteToDeleteFilePath = null;
+
 
 // DOM Element References
 const authScreen = document.getElementById("auth-screen");
 const usernameScreen = document.getElementById("username-screen");
 const dashboardScreen = document.getElementById("dashboard-screen");
 const settingsScreen = document.getElementById("settings-screen");
+const adminScreen = document.getElementById("admin-screen");
+
 
 const navActions = document.getElementById("nav-actions");
 const userDisplay = document.getElementById("user-display");
+const roleBadge = document.getElementById("role-badge");
 const navDashboardBtn = document.getElementById("nav-dashboard-btn");
 const navSettingsBtn = document.getElementById("nav-settings-btn");
+const navAdminBtn = document.getElementById("nav-admin-btn");
 const signoutBtn = document.getElementById("signout-btn");
+
 
 const authForm = document.getElementById("auth-form");
 const authTitle = document.getElementById("auth-title");
@@ -59,14 +54,17 @@ const passwordHint = document.getElementById("password-hint");
 const githubSigninBtn = document.getElementById("github-signin-btn");
 const authMsg = document.getElementById("auth-msg");
 
+
 const usernameForm = document.getElementById("username-form");
 const usernameField = document.getElementById("username-input");
+
 
 const uploadForm = document.getElementById("upload-form");
 const uploadBtn = document.getElementById("upload-btn");
 const progressContainer = document.getElementById("progress-container");
 const uploadProgressBar = document.getElementById("upload-progress-bar");
 const uploadProgressText = document.getElementById("upload-progress-text");
+
 
 const tabPublic = document.getElementById("tab-public");
 const tabPrivate = document.getElementById("tab-private");
@@ -75,14 +73,22 @@ const privateNotesSection = document.getElementById("private-notes-section");
 const publicNotesList = document.getElementById("public-notes-list");
 const privateNotesList = document.getElementById("private-notes-list");
 
+
 const changePasswordForm = document.getElementById("change-password-form");
 const changePasswordBox = document.getElementById("change-password-box");
+
+
+const addModeratorForm = document.getElementById("add-moderator-form");
+const moderatorUsernameField = document.getElementById("moderator-username");
+const usersTableBody = document.getElementById("users-table-body");
+
 
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
 
-// Password Rule Validation
+
+// Password Rule Validation: 8+ characters, 1 uppercase, 1 lowercase, 1 number
 function validatePassword(password) {
   const minLength = password.length >= 8;
   const hasUpper = /[A-Z]/.test(password);
@@ -90,6 +96,7 @@ function validatePassword(password) {
   const hasNumber = /[0-9]/.test(password);
   return minLength && hasUpper && hasLower && hasNumber;
 }
+
 
 // Format bytes into readable string
 function formatBytes(bytes, decimals = 2) {
@@ -101,12 +108,14 @@ function formatBytes(bytes, decimals = 2) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
+
 // Display Message Banner
 function showMsg(text, isError = true) {
   if (!authMsg) return;
   authMsg.innerText = text;
-  authMsg.className = `message ${isError ? 'error' : 'success'}`;
+  authMsg.className = message ${isError ? 'error' : 'success'};
 }
+
 
 // Clear Message Banner
 function clearMsg() {
@@ -115,81 +124,124 @@ function clearMsg() {
   authMsg.className = "message";
 }
 
+
 // Switch Active Screen
 function showScreen(screen) {
   if (!screen) return;
-  if (authScreen) authScreen.classList.remove("active");
-  if (usernameScreen) usernameScreen.classList.remove("active");
-  if (dashboardScreen) dashboardScreen.classList.remove("active");
-  if (settingsScreen) settingsScreen.classList.remove("active");
-
+  [authScreen, usernameScreen, dashboardScreen, settingsScreen, adminScreen].forEach((s) => {
+    if (s) s.classList.remove("active");
+  });
   screen.classList.add("active");
 }
 
-// Application Initialization
-async function initApp() {
-  try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    await handleAuthState(session);
 
-    supabaseClient.auth.onAuthStateChange(async (_event, session) => {
-      await handleAuthState(session);
-    });
-  } catch (err) {
-    showMsg(err.message || "Failed to initialize authentication.");
-  }
+// Role helpers
+function isAdmin() {
+  return currentRole === 'admin';
 }
+
+
+function isModeratorOrAdmin() {
+  return currentRole === 'moderator' || currentRole === 'admin';
+}
+
+
+// Show the role badge and the Admin button
+function updateRoleUI() {
+  if (roleBadge) {
+    if (currentRole === 'admin' || currentRole === 'moderator') {
+      roleBadge.innerText = currentRole;
+      roleBadge.style.display = "inline-block";
+    } else {
+      roleBadge.innerText = "";
+      roleBadge.style.display = "none";
+    }
+  }
+  if (navAdminBtn) navAdminBtn.style.display = isAdmin() ? "inline-block" : "none";
+}
+
+
+// Application Initialization
+// onAuthStateChange fires once on page load (INITIAL_SESSION) and again on every
+// sign-in or sign-out, so it is the only listener needed. The setTimeout runs the
+// profile lookup outside the callback, because awaiting a Supabase query inside
+// onAuthStateChange can freeze the client.
+function initApp() {
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    setTimeout(() => {
+      handleAuthState(session).catch((err) => {
+        showMsg(err.message || "Failed to initialize authentication.");
+      });
+    }, 0);
+  });
+}
+
 
 // Handle Auth State Changes
 async function handleAuthState(session) {
   clearMsg();
+
+
   if (!session) {
     currentUser = null;
+    currentRole = 'user';
+    updateRoleUI();
     if (navActions) navActions.style.display = "none";
     showScreen(authScreen);
     return;
   }
 
-  currentUser = session.user;
-  // CHECK IF ADMIN
-    const { data: adminData } = await supabaseClient
-      .from('admins')
-      .select('user_id')
-      .eq('user_id', currentUser.id)
-      .maybeSingle();
 
-    if (adminData) {
-      isAdmin = true;
-    } else {
-      isAdmin = false;
-    }
+  currentUser = session.user;
   if (navActions) navActions.style.display = "flex";
 
-  // Check if profile row exists for current user
+
+  // Read this user's username and role from the profiles table
   const { data: profile, error } = await supabaseClient
     .from('profiles')
-    .select('username')
+    .select('username, role')
     .eq('id', currentUser.id)
     .maybeSingle();
 
-  if (error || !profile || !profile.username) {
-    showScreen(usernameScreen);
-  } else {
-    if (userDisplay) userDisplay.innerText = `@${profile.username}`;
-    
-    // Hide password change box for OAuth users
-    if (currentUser.app_metadata && currentUser.app_metadata.provider === "github") {
-      if (changePasswordBox) changePasswordBox.style.display = "none";
-    } else {
-      if (changePasswordBox) changePasswordBox.style.display = "block";
-    }
 
-    if (!settingsScreen || !settingsScreen.classList.contains("active")) {
-      showScreen(dashboardScreen);
-      loadDashboardNotes();
-    }
+  if (error) {
+    // Show the real database error instead of hiding it behind the username screen
+    showMsg(Error loading profile: ${error.message});
+    showScreen(usernameScreen);
+    return;
+  }
+
+
+  if (!profile || !profile.username) {
+    currentRole = (profile && profile.role) || 'user';
+    updateRoleUI();
+    showScreen(usernameScreen);
+    return;
+  }
+
+
+  currentRole = profile.role || 'user';
+  updateRoleUI();
+  if (userDisplay) userDisplay.innerText = @${profile.username};
+
+
+  // Hide password change box for GitHub users
+  if (currentUser.app_metadata && currentUser.app_metadata.provider === "github") {
+    if (changePasswordBox) changePasswordBox.style.display = "none";
+  } else {
+    if (changePasswordBox) changePasswordBox.style.display = "block";
+  }
+
+
+  // Stay on Settings or Admin if the user is already there (for example after a token refresh)
+  const onSettings = settingsScreen && settingsScreen.classList.contains("active");
+  const onAdmin = adminScreen && adminScreen.classList.contains("active");
+  if (!onSettings && !(onAdmin && isAdmin())) {
+    showScreen(dashboardScreen);
+    loadDashboardNotes();
   }
 }
+
 
 // Toggle Sign-In / Sign-Up Mode
 if (authToggleLink) {
@@ -201,17 +253,18 @@ if (authToggleLink) {
       if (authTitle) authTitle.innerText = "Sign Up";
       if (authSubmitBtn) authSubmitBtn.innerText = "Create Account";
       if (authToggleText) authToggleText.innerText = "Already have an account?";
-      if (authToggleLink) authToggleLink.innerText = "Sign In";
+      authToggleLink.innerText = "Sign In";
       if (passwordHint) passwordHint.style.display = "block";
     } else {
       if (authTitle) authTitle.innerText = "Sign In";
       if (authSubmitBtn) authSubmitBtn.innerText = "Sign In";
       if (authToggleText) authToggleText.innerText = "Don't have an account?";
-      if (authToggleLink) authToggleLink.innerText = "Sign Up";
+      authToggleLink.innerText = "Sign Up";
       if (passwordHint) passwordHint.style.display = "none";
     }
   });
 }
+
 
 // Submit Sign-In / Sign-Up Form
 if (authForm) {
@@ -219,8 +272,10 @@ if (authForm) {
     e.preventDefault();
     clearMsg();
 
+
     const email = authEmail.value.trim();
     const password = authPassword.value;
+
 
     if (isSignUpMode) {
       if (!validatePassword(password)) {
@@ -228,21 +283,22 @@ if (authForm) {
         return;
       }
 
+
       const { error } = await supabaseClient.auth.signUp({ email, password });
       if (error) {
         showMsg(error.message);
       } else {
-        showMsg("Account created successfully! You can now log in.", false);
+        // Switch back to Sign In mode first, because the toggle clears the message
         authToggleLink.click();
+        showMsg("Account created successfully! You can now sign in.", false);
       }
     } else {
       const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      if (error) {
-        showMsg(error.message);
-      }
+      if (error) showMsg(error.message);
     }
   });
 }
+
 
 // GitHub OAuth Sign-In
 if (githubSigninBtn) {
@@ -258,61 +314,94 @@ if (githubSigninBtn) {
   });
 }
 
+
 // First-time Username Form Handler
 if (usernameForm) {
   usernameForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearMsg();
 
+
     const username = usernameField.value.trim();
     if (!username) return;
 
-    // Check if username already exists in profiles
+
+    // Check if the username is already taken by someone else
     const { data: existingUser, error: checkError } = await supabaseClient
       .from("profiles")
       .select("id")
       .eq("username", username)
       .maybeSingle();
 
+
     if (checkError) {
-      showMsg(`Error checking username: ${checkError.message}`);
+      showMsg(Error checking username: ${checkError.message});
       return;
     }
+
 
     if (existingUser && existingUser.id !== currentUser.id) {
       showMsg("This username is already taken. Please choose another one.");
       return;
     }
 
-    // Upsert user profile row
-    const { error } = await supabaseClient
+
+    // Save the profile row. The role column is NOT sent: the database sets it.
+    const { data: savedRows, error } = await supabaseClient
       .from("profiles")
-      .upsert({ id: currentUser.id, username: username, created_at: new Date() });
+      .upsert({ id: currentUser.id, username: username })
+      .select("username, role");
+
 
     if (error) {
       showMsg(error.message.includes("unique") ? "Username is already taken. Please try another." : error.message);
-    } else {
-      if (userDisplay) userDisplay.innerText = `@${username}`;
-      showMsg("Username saved successfully!", false);
-      showScreen(dashboardScreen);
-      loadDashboardNotes();
+      return;
     }
-  });
-}
 
-// Navigation Listeners
-if (navDashboardBtn) {
-  navDashboardBtn.addEventListener("click", () => {
+
+    if (!savedRows || savedRows.length === 0) {
+      showMsg("The username was sent, but the profiles table did not return it. Run the Supabase setup script again.");
+      return;
+    }
+
+
+    currentRole = savedRows[0].role || 'user';
+    updateRoleUI();
+    if (userDisplay) userDisplay.innerText = @${username};
+    showMsg("Username saved successfully!", false);
     showScreen(dashboardScreen);
     loadDashboardNotes();
   });
 }
 
+
+// Navigation Listeners
+if (navDashboardBtn) {
+  navDashboardBtn.addEventListener("click", () => {
+    clearMsg();
+    showScreen(dashboardScreen);
+    loadDashboardNotes();
+  });
+}
+
+
 if (navSettingsBtn) {
   navSettingsBtn.addEventListener("click", () => {
+    clearMsg();
     showScreen(settingsScreen);
   });
 }
+
+
+if (navAdminBtn) {
+  navAdminBtn.addEventListener("click", () => {
+    if (!isAdmin()) return;
+    clearMsg();
+    showScreen(adminScreen);
+    loadAdminUsers();
+  });
+}
+
 
 if (signoutBtn) {
   signoutBtn.addEventListener("click", async () => {
@@ -320,28 +409,123 @@ if (signoutBtn) {
   });
 }
 
+
 // Change Password Handler
 if (changePasswordForm) {
   changePasswordForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearMsg();
 
-    const newPassword = document.getElementById("new-password").value;
+
+    const newPasswordField = document.getElementById("new-password");
+    const newPassword = newPasswordField.value;
+
 
     if (!validatePassword(newPassword)) {
       showMsg("Password must be at least 8 characters long and contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.");
       return;
     }
 
+
     const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
     if (error) {
       showMsg(error.message);
     } else {
       showMsg("Password updated successfully!", false);
-      document.getElementById("new-password").value = "";
+      newPasswordField.value = "";
     }
   });
 }
+
+
+// ============================================================
+// Admin Screen: list users, add and remove moderators
+// ============================================================
+async function loadAdminUsers() {
+  if (!usersTableBody) return;
+
+
+  const { data: users, error } = await supabaseClient
+    .from("profiles")
+    .select("id, username, role")
+    .order("username", { ascending: true });
+
+
+  if (error) {
+    showMsg(Error loading users: ${error.message});
+    return;
+  }
+
+
+  if (!users || users.length === 0) {
+    usersTableBody.innerHTML = <tr><td colspan="3">No users yet.</td></tr>;
+    return;
+  }
+
+
+  usersTableBody.innerHTML = users.map((u) => {
+    let actionHtml = "";
+    if (u.role === "moderator") {
+      actionHtml = <button type="button" class="secondary small-btn" data-action="remove-moderator" data-username="${escapeHtml(u.username)}">Remove moderator</button>;
+    } else if (u.role === "user" && u.username) {
+      actionHtml = <button type="button" class="small-btn" data-action="make-moderator" data-username="${escapeHtml(u.username)}">Make moderator</button>;
+    }
+    return `
+      <tr>
+        <td>${u.username ? '@' + escapeHtml(u.username) : '<em>no username yet</em>'}</td>
+        <td><span class="role-pill role-${escapeHtml(u.role)}">${escapeHtml(u.role)}</span></td>
+        <td>${actionHtml}</td>
+      </tr>`;
+  }).join("");
+}
+
+
+// Change a user's role through the admin-only database function set_user_role
+async function setUserRole(username, newRole) {
+  clearMsg();
+  const { error } = await supabaseClient.rpc("set_user_role", {
+    target_username: username,
+    new_role: newRole
+  });
+
+
+  if (error) {
+    showMsg(Could not change role: ${error.message});
+    return;
+  }
+
+
+  showMsg(newRole === "moderator" ? @${username} is now a moderator. : @${username} is no longer a moderator., false);
+  loadAdminUsers();
+}
+
+
+if (addModeratorForm) {
+  addModeratorForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const username = moderatorUsernameField.value.trim().replace(/^@/, "");
+    if (!username) return;
+    await setUserRole(username, "moderator");
+    moderatorUsernameField.value = "";
+  });
+}
+
+
+if (usersTableBody) {
+  usersTableBody.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const username = btn.dataset.username;
+    if (btn.dataset.action === "make-moderator") setUserRole(username, "moderator");
+    if (btn.dataset.action === "remove-moderator") setUserRole(username, "user");
+  });
+}
+
+
+// ============================================================
+// Dashboard
+// ============================================================
+
 
 // Dashboard Tab Switching
 if (tabPublic && tabPrivate) {
@@ -352,6 +536,7 @@ if (tabPublic && tabPrivate) {
     privateNotesSection.style.display = "none";
   });
 
+
   tabPrivate.addEventListener("click", () => {
     tabPrivate.classList.add("active");
     tabPublic.classList.remove("active");
@@ -360,11 +545,13 @@ if (tabPublic && tabPrivate) {
   });
 }
 
-// Upload Form Handler with Real Progress & Validation
+
+// Upload Form Handler with Validation
 if (uploadForm) {
   uploadForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     clearMsg();
+
 
     const classTitle = document.getElementById("class-title").value.trim();
     const topicUnit = document.getElementById("topic-unit").value.trim();
@@ -372,60 +559,57 @@ if (uploadForm) {
     const fileInput = document.getElementById("note-file");
     const isPublic = document.getElementById("is-public").checked;
 
+
     const file = fileInput.files[0];
     if (!file) {
       showMsg("Please select a file to upload.");
       return;
     }
 
-    // 1. Client-side File Type Check
+
+    // 1. File type check
     const fileExt = file.name.split('.').pop().toLowerCase();
     const isMimeVideo = file.type.startsWith('video/');
     const isMimeAudio = file.type.startsWith('audio/');
-    
+
+
     if (!ALLOWED_EXTENSIONS.includes(fileExt) && !isMimeVideo && !isMimeAudio) {
       showMsg("Invalid file type. Allowed formats: JPG, PNG, WEBP, GIF, video, audio, PDF, and Word (.docx).");
       return;
     }
 
-    // 2. Client-side File Size Check (10MB limit)
+
+    // 2. File size check (10MB limit)
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      showMsg(`File size exceeds 10 MB limit. Your file is ${formatBytes(file.size)}.`);
+      showMsg(File size exceeds 10 MB limit. Your file is ${formatBytes(file.size)}.);
       return;
     }
 
-    // Clean filename and structure destination path: [user id]/[timestamp]-[file name]
-    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const filePath = `${currentUser.id}/${Date.now()}-${cleanFileName}`;
 
-    // Disable button & setup progress UI
+    // Storage path: [user id]/[timestamp]-[file name]
+    const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const filePath = ${currentUser.id}/${Date.now()}-${cleanFileName};
+
+
     if (uploadBtn) uploadBtn.disabled = true;
     if (progressContainer) progressContainer.style.display = "block";
-    if (uploadProgressBar) uploadProgressBar.value = 0;
-    if (uploadProgressText) uploadProgressText.innerText = "0%";
+    if (uploadProgressBar) uploadProgressBar.removeAttribute("value"); // moving bar while uploading
+    if (uploadProgressText) uploadProgressText.innerText = "Uploading...";
+
 
     try {
-      // Upload file with REAL progress reporting via Supabase Storage Options
-      const { data: storageData, error: uploadError } = await supabaseClient.storage
+      const { error: uploadError } = await supabaseClient.storage
         .from(BUCKET_NAME)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-          onUploadProgress: (progress) => {
-            if (progress.total > 0) {
-              const percent = Math.round((progress.loaded / progress.total) * 100);
-              if (uploadProgressBar) uploadProgressBar.value = percent;
-              if (uploadProgressText) uploadProgressText.innerText = `${percent}% uploaded`;
-            }
-          }
-        });
+        .upload(filePath, file, { cacheControl: '3600', upsert: false });
+
 
       if (uploadError) {
-        showMsg(`Upload failed: ${uploadError.message}`);
+        showMsg(Upload failed: ${uploadError.message});
         return;
       }
 
-      // Save record in database
+
+      // Save the record in the database
       const { error: dbError } = await supabaseClient
         .from("study_notes")
         .insert({
@@ -433,145 +617,159 @@ if (uploadForm) {
           class_title: classTitle,
           topic_unit: topicUnit,
           description: description,
-          file_url: filePath, // Storing file path in bucket
+          file_url: filePath, // path of the file inside the bucket
           file_name: file.name,
           file_size: file.size,
-          is_public: isPublic,
-          created_at: new Date()
+          is_public: isPublic
         });
 
+
       if (dbError) {
-        showMsg(`Failed to save record: ${dbError.message}`);
+        showMsg(Failed to save record: ${dbError.message});
+        // Remove the uploaded file so it is not left without a record
+        await supabaseClient.storage.from(BUCKET_NAME).remove([filePath]);
       } else {
         showMsg("File uploaded successfully!", false);
         uploadForm.reset();
         loadDashboardNotes();
       }
     } catch (err) {
-      showMsg(`Upload failed: ${err.message || err}`);
+      showMsg(Upload failed: ${err.message || err});
     } finally {
       if (uploadBtn) uploadBtn.disabled = false;
       if (progressContainer) progressContainer.style.display = "none";
+      if (uploadProgressBar) uploadProgressBar.value = 0;
     }
   });
 }
 
-// Fetch Signed/Public URL for a storage file path
+
+// Get a signed URL (1 hour) for a file in the private bucket
 async function getFileAccessUrl(filePath) {
   if (!filePath) return "";
-  
-  // Try Signed URL first (for private bucket setups)
-  const { data: signedData, error: signedError } = await supabaseClient.storage
+
+
+  const { data, error } = await supabaseClient.storage
     .from(BUCKET_NAME)
-    .createSignedUrl(filePath, 3600); // 1 hour validity
+    .createSignedUrl(filePath, 3600);
 
-  if (!signedError && signedData?.signedUrl) {
-    return signedData.signedUrl;
-  }
 
-  // Fallback to Public URL
-  const { data: publicData } = supabaseClient.storage
-    .from(BUCKET_NAME)
-    .getPublicUrl(filePath);
-
-  return publicData?.publicUrl || "";
+  if (error || !data?.signedUrl) return "";
+  return data.signedUrl;
 }
+
 
 // Load Dashboard Items
 async function loadDashboardNotes() {
-  // Fetch profiles map for user author display
-  const { data: profiles, error: profilesError } = await supabaseClient.from("profiles").select("id, username");
-  if (profilesError) {
-    showMsg(`Error loading profiles: ${profilesError.message}`);
-  }
-  
-  const profileMap = {};
-  if (profiles) {
-    profiles.forEach(p => { profileMap[p.id] = p.username; });
-  }
+  if (!currentUser) return;
 
-  // Fetch Public Records
+
+  // Usernames for the "Uploaded by" line
+  const { data: profiles, error: profilesError } = await supabaseClient
+    .from("profiles")
+    .select("id, username");
+  if (profilesError) showMsg(Error loading profiles: ${profilesError.message});
+
+
+  const profileMap = {};
+  if (profiles) profiles.forEach((p) => { profileMap[p.id] = p.username; });
+
+
+  // Public notes
   const { data: publicNotes, error: publicError } = await supabaseClient
     .from("study_notes")
     .select("*")
     .eq("is_public", true)
     .order("created_at", { ascending: false });
+  if (publicError) showMsg(Error loading public materials: ${publicError.message});
 
-  if (publicError) showMsg(`Error loading public materials: ${publicError.message}`);
 
-  // Fetch Private Records
+  // This user's private notes
   const { data: privateNotes, error: privateError } = await supabaseClient
     .from("study_notes")
     .select("*")
     .eq("user_id", currentUser.id)
     .eq("is_public", false)
     .order("created_at", { ascending: false });
+  if (privateError) showMsg(Error loading private materials: ${privateError.message});
 
-  if (privateError) showMsg(`Error loading private materials: ${privateError.message}`);
 
   if (publicNotesList) await renderNotes(publicNotes || [], publicNotesList, profileMap);
   if (privateNotesList) await renderNotes(privateNotes || [], privateNotesList, profileMap);
 }
 
-// Render Media Element based on file extension
-function buildMediaMarkup(fileUrl, fileName) {
-  const ext = (fileName || fileUrl).split('.').pop().split('?')[0].toLowerCase();
 
-  // Images
+// Build the preview for a file based on its extension
+function buildMediaMarkup(fileUrl, fileName) {
+  if (!fileUrl) {
+    return <p class="file-size">File preview unavailable.</p>;
+  }
+
+
+  const ext = (fileName || '').split('.').pop().toLowerCase();
+
+
   if (['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
     return `
       <div class="media-preview">
-        <img src="${fileUrl}" alt="${escapeHtml(fileName)}" loading="lazy">
+        <img src="${escapeHtml(fileUrl)}" alt="${escapeHtml(fileName)}" loading="lazy">
       </div>`;
   }
 
-  // Videos
+
   if (['mp4', 'webm', 'ogg', 'mov'].includes(ext)) {
     return `
       <div class="media-preview">
         <video controls preload="metadata">
-          <source src="${fileUrl}">
+          <source src="${escapeHtml(fileUrl)}">
           Your browser does not support video playback.
         </video>
       </div>`;
   }
 
-  // Audio
+
   if (['mp3', 'wav'].includes(ext)) {
     return `
       <div class="media-preview">
         <audio controls preload="metadata">
-          <source src="${fileUrl}">
+          <source src="${escapeHtml(fileUrl)}">
           Your browser does not support audio playback.
         </audio>
       </div>`;
   }
 
-  // PDF & Word Document Link
+
+  // PDF and Word documents
   return `
     <div style="margin-bottom: 0.75rem;">
-      <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" class="file-link">
-        📄 View / Download ${escapeHtml(fileName || 'Document')}
+      <a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="file-link">
+         View / Download ${escapeHtml(fileName || 'Document')}
       </a>
     </div>`;
 }
 
-// Render Notes & Files Cards
+
+// Render Note Cards
 async function renderNotes(notes, container, profileMap) {
   if (notes.length === 0) {
-    container.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;">No materials found.</p>`;
+    container.innerHTML = <p style="color: var(--text-muted); font-size: 0.9rem; grid-column: 1 / -1;">No materials found.</p>;
     return;
   }
 
+
   const cardsHtml = await Promise.all(notes.map(async (note) => {
-    const isOwner = note.user_id === currentUser.id || isAdmin;
-    const author = profileMap[note.user_id] ? `@${profileMap[note.user_id]}` : "Unknown";
-    
-    // Resolve access URL (signed URL for private bucket or fallback)
+    const isOwner = note.user_id === currentUser.id;
+    // Owners can delete their own notes; moderators and the admin can delete any public note
+    const canDelete = isOwner || (note.is_public && isModeratorOrAdmin());
+    const deleteLabel = isOwner ? "Delete" : "Remove (moderator)";
+
+
+    const author = profileMap[note.user_id] ? @${profileMap[note.user_id]} : "Unknown";
     const fileUrl = await getFileAccessUrl(note.file_url);
     const fileName = note.file_name || note.file_url.split('/').pop();
     const mediaMarkup = buildMediaMarkup(fileUrl, fileName);
     const formattedSize = note.file_size ? formatBytes(note.file_size) : '';
+
 
     return `
       <div class="note-card">
@@ -580,21 +778,24 @@ async function renderNotes(notes, container, profileMap) {
           <h3>${escapeHtml(note.topic_unit)}</h3>
           <p>${escapeHtml(note.description || 'No description provided.')}</p>
 
+
           ${mediaMarkup}
+
 
           <div style="margin-bottom: 0.75rem;">
             <div style="font-weight: 600; font-size: 0.85rem;">${escapeHtml(fileName)}</div>
-            ${formattedSize ? `<div class="file-size">Size: ${formattedSize}</div>` : ''}
+            ${formattedSize ? <div class="file-size">Size: ${formattedSize}</div> : ''}
           </div>
         </div>
         <div>
           <div class="meta">Uploaded by <strong>${escapeHtml(author)}</strong></div>
           <div class="actions">
-            <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
-              <button type="button" class="secondary" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Open File</button>
-            </a>
-            ${isOwner ? `
-              <button type="button" class="danger" onclick="openDeleteModal('${note.id}', '${escapeHtml(note.file_url)}')" style="font-size:0.8rem; padding:0.4rem 0.8rem;">Delete</button>
+            ${fileUrl ? `
+              <a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
+                <button type="button" class="secondary small-btn">Open File</button>
+              </a>` : ''}
+            ${canDelete ? `
+              <button type="button" class="danger small-btn" data-action="delete-note" data-note-id="${escapeHtml(note.id)}" data-file-path="${escapeHtml(note.file_url)}">${deleteLabel}</button>
             ` : ''}
           </div>
         </div>
@@ -602,15 +803,29 @@ async function renderNotes(notes, container, profileMap) {
     `;
   }));
 
+
   container.innerHTML = cardsHtml.join('');
 }
 
+
+// Delete buttons on note cards (one listener per list)
+[publicNotesList, privateNotesList].forEach((list) => {
+  if (!list) return;
+  list.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-action='delete-note']");
+    if (!btn) return;
+    openDeleteModal(btn.dataset.noteId, btn.dataset.filePath);
+  });
+});
+
+
 // Open Delete Confirmation Modal
-window.openDeleteModal = function(noteId, filePath) {
+function openDeleteModal(noteId, filePath) {
   noteToDeleteId = noteId;
   noteToDeleteFilePath = filePath;
   if (deleteModal) deleteModal.classList.add("active");
-};
+}
+
 
 // Close Delete Confirmation Modal
 function closeDeleteModal() {
@@ -619,52 +834,56 @@ function closeDeleteModal() {
   if (deleteModal) deleteModal.classList.remove("active");
 }
 
+
 if (cancelDeleteBtn) {
   cancelDeleteBtn.addEventListener("click", closeDeleteModal);
 }
 
-// Confirm Delete Event Handler
+
+// Confirm Delete: remove the file first, then the database record.
+// (Moderator permission on the file depends on the note record still existing.)
 if (confirmDeleteBtn) {
   confirmDeleteBtn.addEventListener("click", async () => {
     if (!noteToDeleteId) return;
+    clearMsg();
 
-    // Delete DB record
-    const { error: dbError } = await supabaseClient
+
+    if (noteToDeleteFilePath) {
+      const { error: storageError } = await supabaseClient.storage
+        .from(BUCKET_NAME)
+        .remove([noteToDeleteFilePath]);
+      if (storageError) console.warn("File removal problem:", storageError.message);
+    }
+
+
+    const { data: deletedRows, error: dbError } = await supabaseClient
       .from("study_notes")
       .delete()
-      .eq("id", noteToDeleteId);
+      .eq("id", noteToDeleteId)
+      .select("id");
+
 
     if (dbError) {
-      showMsg(`Failed to delete record: ${dbError.message}`);
+      showMsg(Failed to delete record: ${dbError.message});
+    } else if (!deletedRows || deletedRows.length === 0) {
+      showMsg("You do not have permission to delete this material.");
     } else {
-      // Remove file from storage bucket
-      try {
-        if (noteToDeleteFilePath) {
-          const { error: storageDeleteError } = await supabaseClient.storage
-            .from(BUCKET_NAME)
-            .remove([noteToDeleteFilePath]);
-
-          if (storageDeleteError) {
-            console.warn("Storage removal note:", storageDeleteError.message);
-          }
-        }
-      } catch (e) {
-        console.error("Storage cleanup error:", e);
-      }
-
       showMsg("Material deleted successfully.", false);
       loadDashboardNotes();
     }
+
 
     closeDeleteModal();
   });
 }
 
-// Helper to sanitize text output against XSS
+
+// Make text safe to put inside HTML
 function escapeHtml(str) {
   return String(str || '').replace(/[&<>"']/g, (m) => {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
 }
+
 
 initApp();
