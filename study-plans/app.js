@@ -1,4 +1,3 @@
-
 // app.js - Study Notes Hub Application Logic
 // Roles: every account is a "user". The admin (set by email in Supabase) can make
 // users into moderators. Moderators and the admin can delete any PUBLIC note.
@@ -21,6 +20,8 @@ let currentUser = null;
 let currentRole = 'user'; // 'user', 'moderator' or 'admin' (read from the profiles table)
 let noteToDeleteId = null;
 let noteToDeleteFilePath = null;
+let reportTargetType = null; // 'post' or 'user'
+let reportTargetId = null;
 
 // DOM Element References
 const authScreen = document.getElementById("auth-screen");
@@ -70,6 +71,16 @@ const changePasswordBox = document.getElementById("change-password-box");
 const addModeratorForm = document.getElementById("add-moderator-form");
 const moderatorUsernameField = document.getElementById("moderator-username");
 const usersTableBody = document.getElementById("users-table-body");
+const moderatorTools = document.getElementById("moderator-tools");
+const reportsList = document.getElementById("reports-list");
+
+const reportModal = document.getElementById("report-modal");
+const reportModalTitle = document.getElementById("report-modal-title");
+const reportReasonField = document.getElementById("report-reason");
+const reportCharCount = document.getElementById("report-char-count");
+const reportModalMsg = document.getElementById("report-modal-msg");
+const cancelReportBtn = document.getElementById("cancel-report-btn");
+const submitReportBtn = document.getElementById("submit-report-btn");
 
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
@@ -137,7 +148,10 @@ function updateRoleUI() {
       roleBadge.style.display = "none";
     }
   }
-  if (navAdminBtn) navAdminBtn.style.display = isAdmin() ? "inline-block" : "none";
+  // Moderators and the admin can open this screen to read reports.
+  // Only the admin sees the moderator management tools on it.
+  if (navAdminBtn) navAdminBtn.style.display = isModeratorOrAdmin() ? "inline-block" : "none";
+  if (moderatorTools) moderatorTools.style.display = isAdmin() ? "block" : "none";
 }
 
 // Application Initialization
@@ -206,7 +220,7 @@ async function handleAuthState(session) {
   // Stay on Settings or Admin if the user is already there (for example after a token refresh)
   const onSettings = settingsScreen && settingsScreen.classList.contains("active");
   const onAdmin = adminScreen && adminScreen.classList.contains("active");
-  if (!onSettings && !(onAdmin && isAdmin())) {
+  if (!onSettings && !(onAdmin && isModeratorOrAdmin())) {
     showScreen(dashboardScreen);
     loadDashboardNotes();
   }
@@ -347,10 +361,11 @@ if (navSettingsBtn) {
 
 if (navAdminBtn) {
   navAdminBtn.addEventListener("click", () => {
-    if (!isAdmin()) return;
+    if (!isModeratorOrAdmin()) return;
     clearMsg();
     showScreen(adminScreen);
-    loadAdminUsers();
+    if (isAdmin()) loadAdminUsers();
+    loadReports();
   });
 }
 
@@ -695,10 +710,10 @@ async function renderNotes(notes, container, profileMap) {
               <a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
                 <button type="button" class="secondary small-btn">Open File</button>
               </a>` : ''}
-              ${!isOwner ? `
-  <button type="button" class="secondary small-btn" onclick="submitReport('post', '${note.id}')">Report Post</button>
-  <button type="button" class="secondary small-btn" onclick="submitReport('user', '${note.user_id}')">Report User</button>
-` : ''}
+            ${!isOwner ? `
+              <button type="button" class="secondary small-btn" data-action="report-post" data-target-id="${escapeHtml(note.id)}" data-target-label="${escapeHtml(note.topic_unit)}">Report Post</button>
+              <button type="button" class="secondary small-btn" data-action="report-user" data-target-id="${escapeHtml(note.user_id)}" data-target-label="${escapeHtml(author)}">Report User</button>
+            ` : ''}
             ${canDelete ? `
               <button type="button" class="danger small-btn" data-action="delete-note" data-note-id="${escapeHtml(note.id)}" data-file-path="${escapeHtml(note.file_url)}">${deleteLabel}</button>
             ` : ''}
@@ -715,6 +730,13 @@ async function renderNotes(notes, container, profileMap) {
 [publicNotesList, privateNotesList].forEach((list) => {
   if (!list) return;
   list.addEventListener("click", (e) => {
+    const reportBtn = e.target.closest("button[data-action='report-post'], button[data-action='report-user']");
+    if (reportBtn) {
+      const type = reportBtn.dataset.action === "report-post" ? "post" : "user";
+      openReportModal(type, reportBtn.dataset.targetId, reportBtn.dataset.targetLabel);
+      return;
+    }
+
     const btn = e.target.closest("button[data-action='delete-note']");
     if (!btn) return;
     openDeleteModal(btn.dataset.noteId, btn.dataset.filePath);
@@ -778,30 +800,161 @@ function escapeHtml(str) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
 }
-async function submitReport(targetType, targetId) {
-  if (!currentUser) {
-    alert("You must be logged in to report.");
+
+// ============================================================
+// Reports: the popup students use to report a post or a user
+// ============================================================
+function showReportModalMsg(text) {
+  if (!reportModalMsg) return;
+  reportModalMsg.innerText = text;
+  reportModalMsg.classList.toggle("active", !!text);
+}
+
+function openReportModal(targetType, targetId, targetLabel) {
+  if (!currentUser) return;
+  reportTargetType = targetType;
+  reportTargetId = targetId;
+  if (reportModalTitle) {
+    reportModalTitle.innerText = targetType === "post"
+      ? `Report post: ${targetLabel || ""}`
+      : `Report user: ${targetLabel || ""}`;
+  }
+  if (reportReasonField) reportReasonField.value = "";
+  if (reportCharCount) reportCharCount.innerText = "0";
+  showReportModalMsg("");
+  if (submitReportBtn) submitReportBtn.disabled = false;
+  if (reportModal) reportModal.classList.add("active");
+  if (reportReasonField) reportReasonField.focus();
+}
+
+function closeReportModal() {
+  reportTargetType = null;
+  reportTargetId = null;
+  if (reportModal) reportModal.classList.remove("active");
+}
+
+if (reportReasonField) {
+  reportReasonField.addEventListener("input", () => {
+    if (reportCharCount) reportCharCount.innerText = String(reportReasonField.value.length);
+  });
+}
+
+if (cancelReportBtn) {
+  cancelReportBtn.addEventListener("click", closeReportModal);
+}
+
+if (submitReportBtn) {
+  submitReportBtn.addEventListener("click", async () => {
+    if (!currentUser || !reportTargetType || !reportTargetId) return;
+
+    const reason = reportReasonField.value.trim();
+    if (!reason) {
+      showReportModalMsg("Please tell us why you are reporting this.");
+      return;
+    }
+
+    submitReportBtn.disabled = true;
+    showReportModalMsg("");
+
+    const { error } = await supabaseClient
+      .from("reports")
+      .insert({
+        reporter_id: currentUser.id,
+        target_type: reportTargetType,
+        target_id: reportTargetId,
+        reason: reason
+      });
+
+    if (error) {
+      submitReportBtn.disabled = false;
+      if (error.code === "23505") {
+        showReportModalMsg("You have already reported this.");
+      } else {
+        console.error("Report error:", error);
+        showReportModalMsg(`Could not submit your report: ${error.message}`);
+      }
+      return;
+    }
+
+    closeReportModal();
+    showMsg("Report submitted. A moderator will review it.", false);
+  });
+}
+
+// ============================================================
+// Reports: the list moderators and the admin read
+// ============================================================
+async function loadReports() {
+  if (!reportsList || !isModeratorOrAdmin()) return;
+
+  reportsList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem;">Loading reports...</p>`;
+
+  const { data: reports, error } = await supabaseClient
+    .from("reports")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    reportsList.innerHTML = "";
+    showMsg(`Error loading reports: ${error.message}`);
     return;
   }
 
-  const reason = prompt(`Why are you reporting this ${targetType}? (e.g., inappropriate, spam, broken file)`);
-  if (!reason || reason.trim() === "") return;
-
-  const { error } = await supabaseClient
-    .from('reports')
-    .insert({
-      reporter_id: currentUser.id,
-      target_type: targetType,
-      target_id: targetId,
-      reason: reason.trim()
-    });
-
-  if (error) {
-    console.error("Report error:", error);
-    alert("There was an error submitting your report.");
-  } else {
-    alert("Report submitted successfully. Admins will review it shortly.");
+  if (!reports || reports.length === 0) {
+    reportsList.innerHTML = `<p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.75rem;">No reports yet.</p>`;
+    return;
   }
+
+  // Usernames for reporters and reported users
+  const { data: profiles } = await supabaseClient.from("profiles").select("id, username");
+  const nameMap = {};
+  if (profiles) profiles.forEach((p) => { nameMap[p.id] = p.username; });
+  const nameOf = (id) => (nameMap[id] ? `@${nameMap[id]}` : "Unknown user");
+
+  // The posts that were reported
+  const postIds = reports.filter((r) => r.target_type === "post").map((r) => r.target_id);
+  const noteMap = {};
+  if (postIds.length > 0) {
+    const { data: notes } = await supabaseClient
+      .from("study_notes")
+      .select("id, user_id, class_title, topic_unit, file_url, file_name")
+      .in("id", postIds);
+    if (notes) notes.forEach((n) => { noteMap[n.id] = n; });
+  }
+
+  const itemsHtml = await Promise.all(reports.map(async (r) => {
+    const when = new Date(r.created_at).toLocaleString();
+    let targetHtml = "";
+
+    if (r.target_type === "user") {
+      targetHtml = `<div class="report-line">Reported user: <strong>${escapeHtml(nameOf(r.target_id))}</strong></div>`;
+    } else {
+      const note = noteMap[r.target_id];
+      if (!note) {
+        targetHtml = `<div class="report-line">Reported post: <em>no longer available (it may have been deleted)</em></div>`;
+      } else {
+        const fileUrl = await getFileAccessUrl(note.file_url);
+        const fileName = note.file_name || note.file_url.split("/").pop();
+        targetHtml = `
+          <div class="report-line">Reported post: <strong>${escapeHtml(note.topic_unit)}</strong> (${escapeHtml(note.class_title)})</div>
+          <div class="report-line">Uploaded by ${escapeHtml(nameOf(note.user_id))}</div>
+          ${fileUrl ? `<div class="report-line"><a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" class="file-link">📄 Open ${escapeHtml(fileName)}</a></div>` : ""}`;
+      }
+    }
+
+    return `
+      <div class="report-item">
+        <div class="report-head">
+          <span class="report-type">${escapeHtml(r.target_type)} report</span>
+          <span class="report-date">${escapeHtml(when)}</span>
+        </div>
+        <div class="report-line">Reported by <strong>${escapeHtml(nameOf(r.reporter_id))}</strong></div>
+        <div class="report-reason">${escapeHtml(r.reason)}</div>
+        ${targetHtml}
+      </div>`;
+  }));
+
+  reportsList.innerHTML = itemsHtml.join("");
 }
 
 initApp();
