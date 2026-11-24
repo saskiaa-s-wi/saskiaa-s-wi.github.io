@@ -22,6 +22,8 @@ let noteToDeleteId = null;
 let noteToDeleteFilePath = null;
 let reportTargetType = null; // 'post' or 'user'
 let reportTargetId = null;
+let signedOutNotice = null; // a message to show on the sign-in screen after signing out
+let isDeletingData = false;
 
 // DOM Element References
 const authScreen = document.getElementById("auth-screen");
@@ -85,6 +87,13 @@ const reportCharCount = document.getElementById("report-char-count");
 const reportModalMsg = document.getElementById("report-modal-msg");
 const cancelReportBtn = document.getElementById("cancel-report-btn");
 const submitReportBtn = document.getElementById("submit-report-btn");
+
+const deleteDataBtn = document.getElementById("delete-data-btn");
+const deleteDataModal = document.getElementById("delete-data-modal");
+const deleteDataConfirmField = document.getElementById("delete-data-confirm");
+const deleteDataMsg = document.getElementById("delete-data-msg");
+const cancelDeleteDataBtn = document.getElementById("cancel-delete-data-btn");
+const confirmDeleteDataBtn = document.getElementById("confirm-delete-data-btn");
 
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
@@ -183,6 +192,10 @@ async function handleAuthState(session) {
     updateRoleUI();
     if (navActions) navActions.style.display = "none";
     showScreen(authScreen);
+    if (signedOutNotice) {
+      showMsg(signedOutNotice, false);
+      signedOutNotice = null;
+    }
     return;
   }
 
@@ -424,6 +437,124 @@ if (changePasswordForm) {
       showMsg("Password updated successfully!", false);
       newPasswordField.value = "";
     }
+  });
+}
+
+// ============================================================
+// Delete my data: removes the user's files, rows and account
+// ============================================================
+function showDeleteDataMsg(text) {
+  if (!deleteDataMsg) return;
+  deleteDataMsg.innerText = text;
+  deleteDataMsg.classList.toggle("active", !!text);
+}
+
+function openDeleteDataModal() {
+  if (!currentUser) return;
+  if (deleteDataConfirmField) deleteDataConfirmField.value = "";
+  if (confirmDeleteDataBtn) {
+    confirmDeleteDataBtn.disabled = true;
+    confirmDeleteDataBtn.innerText = "Delete everything";
+  }
+  if (cancelDeleteDataBtn) cancelDeleteDataBtn.disabled = false;
+  showDeleteDataMsg("");
+  if (deleteDataModal) deleteDataModal.classList.add("active");
+  if (deleteDataConfirmField) deleteDataConfirmField.focus();
+}
+
+function closeDeleteDataModal() {
+  if (isDeletingData) return; // do not close while deleting
+  if (deleteDataModal) deleteDataModal.classList.remove("active");
+}
+
+// Collect every file path that belongs to this user in the bucket
+async function collectUserFilePaths(userId) {
+  const paths = new Set();
+
+  // 1. Paths saved on the user's notes
+  const { data: notes, error: notesError } = await supabaseClient
+    .from("study_notes")
+    .select("file_url")
+    .eq("user_id", userId);
+  if (notesError) throw new Error(`Could not read your notes: ${notesError.message}`);
+  (notes || []).forEach((n) => { if (n.file_url) paths.add(n.file_url); });
+
+  // 2. Anything else in the user's own folder (for example a file left behind by a failed upload)
+  const pageSize = 100;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data: files, error: listError } = await supabaseClient.storage
+      .from(BUCKET_NAME)
+      .list(userId, { limit: pageSize, offset: offset });
+    if (listError) throw new Error(`Could not list your files: ${listError.message}`);
+    if (!files || files.length === 0) break;
+    files.forEach((f) => { if (f.id) paths.add(`${userId}/${f.name}`); });
+    if (files.length < pageSize) break;
+  }
+
+  return Array.from(paths);
+}
+
+async function deleteAllMyData() {
+  const userId = currentUser.id;
+
+  // Step 1: delete the files first (the database step removes the records that point to them)
+  const paths = await collectUserFilePaths(userId);
+  const chunkSize = 100;
+  for (let i = 0; i < paths.length; i += chunkSize) {
+    const chunk = paths.slice(i, i + chunkSize);
+    const { error: removeError } = await supabaseClient.storage.from(BUCKET_NAME).remove(chunk);
+    if (removeError) throw new Error(`Could not delete your files: ${removeError.message}`);
+  }
+
+  // Step 2: delete the rows and the account through the delete_my_data database function
+  const { error: rpcError } = await supabaseClient.rpc("delete_my_data");
+  if (rpcError) throw new Error(`Could not delete your data: ${rpcError.message}`);
+}
+
+if (deleteDataBtn) {
+  deleteDataBtn.addEventListener("click", openDeleteDataModal);
+}
+
+if (cancelDeleteDataBtn) {
+  cancelDeleteDataBtn.addEventListener("click", closeDeleteDataModal);
+}
+
+// The red button only turns on once the person types DELETE
+if (deleteDataConfirmField) {
+  deleteDataConfirmField.addEventListener("input", () => {
+    if (confirmDeleteDataBtn) {
+      confirmDeleteDataBtn.disabled = deleteDataConfirmField.value.trim() !== "DELETE";
+    }
+  });
+}
+
+if (confirmDeleteDataBtn) {
+  confirmDeleteDataBtn.addEventListener("click", async () => {
+    if (!currentUser || isDeletingData) return;
+    if (deleteDataConfirmField.value.trim() !== "DELETE") return;
+
+    isDeletingData = true;
+    confirmDeleteDataBtn.disabled = true;
+    confirmDeleteDataBtn.innerText = "Deleting...";
+    if (cancelDeleteDataBtn) cancelDeleteDataBtn.disabled = true;
+    showDeleteDataMsg("");
+
+    try {
+      await deleteAllMyData();
+    } catch (err) {
+      isDeletingData = false;
+      confirmDeleteDataBtn.innerText = "Delete everything";
+      confirmDeleteDataBtn.disabled = false;
+      if (cancelDeleteDataBtn) cancelDeleteDataBtn.disabled = false;
+      showDeleteDataMsg(`${err.message || err} You can try again.`);
+      return;
+    }
+
+    // Done. The account no longer exists, so clear the saved login on this device.
+    isDeletingData = false;
+    if (deleteDataModal) deleteDataModal.classList.remove("active");
+    signedOutNotice = "Your data has been deleted.";
+    await supabaseClient.auth.signOut({ scope: "local" });
   });
 }
 
