@@ -7,17 +7,29 @@
   
   <style>
     :root {
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --bg: #f8fafc;
+      /* Pond palette, inspired by the water lily painting */
+      --primary: #2f7d76;          /* pond teal (the bridge and water) */
+      --primary-hover: #25645e;
+      --accent: #d9668a;           /* lily pink */
+      --accent-soft: #fbe6ee;
+      --accent-deep: #9b3558;
+      --sage: #a9b878;             /* willow and lily pad green */
+      --bg: #f4f7f0;              /* misty morning */
       --card-bg: #ffffff;
-      --text: #0f172a;
-      --text-muted: #64748b;
-      --border: #e2e8f0;
-      --error: #ef4444;
-      --success: #16a34a;
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --surface-soft: #f6f9f4;
+      --surface-hover: #e8f1ea;
+      --text: #1f3330;             /* deep forest */
+      --text-muted: #5c716c;
+      --border: #d9e5dd;
+      --error: #c8453f;
+      --error-hover: #a93832;
+      --error-bg: #fdf0ee;
+      --error-border: #f3c4bf;
+      --success: #2f7d4f;
+      --success-bg: #eef7ee;
+      --success-border: #c3e3c9;
+      --shadow-sm: 0 1px 2px 0 rgb(31 77 74 / 0.08);
+      --shadow-md: 0 6px 14px -3px rgb(31 77 74 / 0.14), 0 2px 5px -2px rgb(31 77 74 / 0.10);
     }
 
     * {
@@ -115,7 +127,7 @@
       border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 0.95rem;
-      background-color: #fff;
+      background-color: var(--card-bg);
       transition: border-color 0.15s ease;
     }
 
@@ -125,7 +137,7 @@
     textarea:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+      box-shadow: 0 0 0 3px rgba(47, 125, 118, 0.18);
     }
 
     button {
@@ -148,7 +160,7 @@
     }
 
     button:disabled {
-      background-color: #94a3b8;
+      background-color: #a9bbb5;
       cursor: not-allowed;
     }
 
@@ -159,7 +171,7 @@
     }
 
     button.secondary:hover {
-      background-color: #f1f5f9;
+      background-color: var(--surface-hover);
     }
 
     button.danger {
@@ -168,7 +180,7 @@
     }
 
     button.danger:hover {
-      background-color: #dc2626;
+      background-color: var(--error-hover);
     }
 
     .github-btn {
@@ -220,16 +232,16 @@
 
     .message.error {
       display: block;
-      background-color: #fef2f2;
+      background-color: var(--error-bg);
       color: var(--error);
-      border: 1px solid #fecaca;
+      border: 1px solid var(--error-border);
     }
 
     .message.success {
       display: block;
-      background-color: #f0fdf4;
+      background-color: var(--success-bg);
       color: var(--success);
-      border: 1px solid #bbf7d0;
+      border: 1px solid var(--success-border);
     }
 
     .tabs {
@@ -264,7 +276,7 @@
       border: 1px solid var(--border);
       padding: 1.25rem;
       border-radius: 10px;
-      background: #ffffff;
+      background: var(--card-bg);
       box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
@@ -281,8 +293,8 @@
       display: inline-block;
       font-size: 0.75rem;
       font-weight: 600;
-      background: #eff6ff;
-      color: #1e40af;
+      background: var(--accent-soft);
+      color: var(--accent-deep);
       padding: 0.2rem 0.6rem;
       border-radius: 20px;
       margin-bottom: 0.5rem;
@@ -300,7 +312,7 @@
       width: 100%;
       border-radius: 6px;
       overflow: hidden;
-      background-color: #f1f5f9;
+      background-color: var(--surface-hover);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -341,12 +353,13 @@
 
     .note-card .meta {
       font-size: 0.8rem;
-      color: #94a3b8;
+      color: var(--text-muted);
       margin-bottom: 1rem;
     }
 
     .note-card .actions {
       display: flex;
+      flex-wrap: wrap;
       gap: 0.5rem;
       align-items: center;
     }
@@ -371,7 +384,7 @@
     }
 
     progress::-webkit-progress-bar {
-      background-color: #e2e8f0;
+      background-color: var(--border);
       border-radius: 5px;
     }
 
@@ -387,7 +400,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(15, 23, 42, 0.5);
+      background: rgba(31, 51, 48, 0.5);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -398,7 +411,7 @@
     }
 
     .modal-box {
-      background: #ffffff;
+      background: var(--card-bg);
       padding: 1.75rem;
       border-radius: 12px;
       max-width: 420px;
@@ -459,18 +472,206 @@
       font-weight: 600;
       padding: 0.15rem 0.55rem;
       border-radius: 999px;
-      background: #f1f5f9;
+      background: var(--surface-hover);
       color: var(--text-muted);
     }
 
     .role-pill.role-moderator {
-      background: #dbeafe;
-      color: #1e40af;
+      background: #dcebe4;
+      color: #1f5f59;
     }
 
     .role-pill.role-admin {
       background: #fef3c7;
       color: #92400e;
+    }
+
+    /* Report popup and Reports list */
+    .modal-box textarea {
+      margin-bottom: 0.35rem;
+    }
+
+    .modal-msg {
+      display: none;
+      font-size: 0.85rem;
+      color: var(--error);
+      margin-bottom: 0.75rem;
+    }
+
+    .modal-msg.active {
+      display: block;
+    }
+
+    .char-count {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+
+    .report-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      margin-top: 0.75rem;
+      background: var(--card-bg);
+    }
+
+    .report-item .report-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
+    }
+
+    .report-item .report-type {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .report-item .report-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .report-item .report-reason {
+      font-size: 0.9rem;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      margin: 0.5rem 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .report-item .report-line {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Footer and Privacy Policy page */
+    .site-footer {
+      text-align: center;
+      padding: 1.25rem 1rem 1.75rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .site-footer a {
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .site-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .policy h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 1.75rem 0 0.5rem;
+    }
+
+    .policy p {
+      font-size: 0.95rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .policy ul {
+      margin: 0 0 0.75rem 1.25rem;
+    }
+
+    .policy li {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .policy .updated {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .policy .users-table td:first-child {
+      font-weight: 600;
+      width: 34%;
+    }
+
+    .policy .fill-in {
+      background: #fef3c7;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    /* Pond theme: watercolor wash, soft headings, lily touches */
+    body {
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(ellipse 60% 45% at 8% 0%, rgba(233, 143, 168, 0.28), transparent 70%),
+        radial-gradient(ellipse 55% 50% at 100% 12%, rgba(169, 184, 120, 0.30), transparent 70%),
+        radial-gradient(ellipse 70% 55% at 85% 100%, rgba(47, 125, 118, 0.20), transparent 70%),
+        radial-gradient(ellipse 50% 45% at 0% 95%, rgba(240, 150, 100, 0.16), transparent 70%);
+      background-attachment: fixed;
+    }
+
+    ::selection {
+      background: rgba(217, 102, 138, 0.25);
+    }
+
+    header {
+      background: linear-gradient(100deg, rgba(255, 255, 255, 0.94), rgba(255, 245, 248, 0.94) 55%, rgba(238, 244, 226, 0.94));
+      backdrop-filter: blur(6px);
+    }
+
+    header h1::before {
+      content: "\1FAB7";
+      margin-right: 0.5rem;
+    }
+
+    header h1,
+    h2,
+    h3 {
+      font-family: Georgia, "Palatino Linotype", Palatino, "Book Antiqua", serif;
+    }
+
+    .screen {
+      background-color: rgba(255, 255, 255, 0.94);
+      background-image: linear-gradient(90deg, var(--accent), var(--sage), var(--primary));
+      background-size: 100% 4px;
+      background-repeat: no-repeat;
+      background-position: top;
+      border-radius: 16px;
+    }
+
+    .tab.active {
+      border-color: var(--accent);
+      color: var(--primary);
+    }
+
+    .note-card {
+      border-radius: 14px;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .note-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .modal-box {
+      border-radius: 16px;
+      border-top: 4px solid var(--accent);
     }
   </style>
 
@@ -538,7 +739,7 @@
       <h2>Study Dashboard</h2>
       
       <!-- Upload Section -->
-      <section style="margin-bottom: 2rem; background: #f8fafc; padding: 1.5rem; border-radius: 10px; border: 1px solid var(--border);">
+      <section style="margin-bottom: 2rem; background: var(--surface-soft); padding: 1.5rem; border-radius: 10px; border: 1px solid var(--border);">
         <h3 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 700;">Upload Study Material or File</h3>
         <form id="upload-form">
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
@@ -612,26 +813,114 @@
         Moderators can remove any public note or file. Only the admin can add or remove moderators.
       </p>
 
-      <form id="add-moderator-form" style="display: flex; gap: 0.75rem; align-items: flex-end;">
-        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-          <label for="moderator-username">Add a moderator by username</label>
-          <input type="text" id="moderator-username" required placeholder="e.g. StudyPro2026">
-        </div>
-        <button type="submit">Make Moderator</button>
-      </form>
+      <div id="moderator-tools">
+        <form id="add-moderator-form" style="display: flex; gap: 0.75rem; align-items: flex-end;">
+          <div class="form-group" style="flex: 1; margin-bottom: 0;">
+            <label for="moderator-username">Add a moderator by username</label>
+            <input type="text" id="moderator-username" required placeholder="e.g. StudyPro2026">
+          </div>
+          <button type="submit">Make Moderator</button>
+        </form>
 
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Role</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body"></tbody>
+        </table>
+      </div>
+
+      <div id="reports-section" style="margin-top: 2rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 700;">Reports</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Newest first. Reports are filed by students about posts and users.</p>
+        <div id="reports-list"></div>
+      </div>
+    </div>
+
+    <div id="privacy-screen" class="screen policy">
+      <button type="button" class="secondary small-btn" id="privacy-back-btn" style="margin-bottom: 1rem;">&larr; Back</button>
+      <h2>Privacy Policy</h2>
+      <p class="updated">Last updated: November 24, 2026. This page is written in plain words on purpose.</p>
+
+      <h3>The short version</h3>
+      <ul>
+        <li>We only save what the app needs to work: your sign-in details, your username, and the notes and files you upload.</li>
+        <li>Your private notes are for you only. Your public notes can be seen by every student who is signed in.</li>
+        <li>You can delete any of your notes at any time. To delete your whole account, ask us (see "Questions or requests" below).</li>
+        <li>We do not sell your information, and this app has no ads and no tracking tools.</li>
+      </ul>
+
+      <h3>What we save</h3>
+      <ul>
+        <li><strong>Your sign-in:</strong> your email address and password if you sign up with email, or the email address GitHub shares with us if you use GitHub. Passwords are scrambled when they are saved, so nobody can read them, including us. We never see your GitHub password.</li>
+        <li><strong>Your profile:</strong> your username and your role (regular user, moderator, or admin).</li>
+        <li><strong>Your notes:</strong> the class title, topic or unit, description, the file you upload (its name, size, and the file itself), whether it is public or private, and when you added it.</li>
+        <li><strong>Reports:</strong> if you report a post or a user, we save who you are, what you reported, the reason you gave, and when you sent it.</li>
+        <li><strong>In your browser:</strong> a sign-in token that keeps you signed in on this device. Signing out removes it.</li>
+      </ul>
+      <p>Your data is stored with Supabase, the service that runs this app's database and file storage. GitHub is used if you choose to sign in with GitHub, and this site is hosted on GitHub Pages.</p>
+
+      <h3>Who can see it</h3>
       <table class="users-table">
         <thead>
           <tr>
-            <th>Username</th>
-            <th>Role</th>
-            <th>Action</th>
+            <th>What</th>
+            <th>Who can see it</th>
           </tr>
         </thead>
-        <tbody id="users-table-body"></tbody>
+        <tbody>
+          <tr>
+            <td>Your email address</td>
+            <td>Not shown to other students.</td>
+          </tr>
+          <tr>
+            <td>Your password</td>
+            <td>Nobody. It is saved in scrambled form.</td>
+          </tr>
+          <tr>
+            <td>Your username</td>
+            <td>Every signed-in student. It is shown on your public notes.</td>
+          </tr>
+          <tr>
+            <td>Public notes and their files</td>
+            <td>Every signed-in student. Moderators and the admin can also remove them. People who are not signed in cannot see them.</td>
+          </tr>
+          <tr>
+            <td>Private notes and their files</td>
+            <td>Only you.</td>
+          </tr>
+          <tr>
+            <td>Reports you send</td>
+            <td>Moderators and the admin only. The person you reported is not shown who reported them.</td>
+          </tr>
+        </tbody>
       </table>
+      <p style="margin-top: 0.75rem;">Links to files stop working after one hour. If you copy a file link and share it, anyone who has it can open that file until it expires, so only share links you are happy for others to see.</p>
+      <p>The person who runs this app manages the database and file storage, so they can reach everything saved in them. They only look when needed to run the app, handle a report, or fix a problem.</p>
+
+      <h3>How to delete your data</h3>
+      <ul>
+        <li><strong>Delete a note and its file:</strong> go to the Dashboard, find your note under "Public Files &amp; Notes" or "My Private Files &amp; Notes", click <strong>Delete</strong>, and confirm. The note and its file are removed for good.</li>
+        <li><strong>Remove your sign-in from this device:</strong> click <strong>Sign Out</strong>.</li>
+        <li><strong>Change your password:</strong> go to Settings, then Change Password (email accounts only).</li>
+        <li><strong>Delete your whole account:</strong> there is no button for this yet, so please contact us using the details below. We will delete your account, username, notes, files, and the reports you sent, within 30 days. Reports other people sent about you may be kept for a while so moderators can finish reviewing them.</li>
+      </ul>
+
+      <h3>Questions or requests</h3>
+      <p>To ask a question, or to ask us to delete your account, contact: <span class="fill-in">[saskiawibis@gmail.com]</span></p>
+
+      <h3>Changes to this page</h3>
+      <p>If we change this policy, we will update the date at the top of this page.</p>
     </div>
   </div>
+
+  <footer class="site-footer">
+    <a href="#" id="privacy-link">Privacy Policy</a>
+  </footer>
 
   <div id="delete-modal" class="modal-overlay">
     <div class="modal-box">
@@ -640,6 +929,20 @@
       <div class="modal-actions">
         <button type="button" class="secondary" id="cancel-delete-btn">Cancel</button>
         <button type="button" class="danger" id="confirm-delete-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="report-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 id="report-modal-title">Report</h3>
+      <p>Tell us why you are reporting this. A moderator will review it.</p>
+      <textarea id="report-reason" rows="4" maxlength="500" placeholder="e.g. inappropriate content, spam, wrong or broken file"></textarea>
+      <div class="char-count"><span id="report-char-count">0</span> / 500</div>
+      <div id="report-modal-msg" class="modal-msg"></div>
+      <div class="modal-actions">
+        <button type="button" class="secondary" id="cancel-report-btn">Cancel</button>
+        <button type="button" class="danger" id="submit-report-btn">Submit Report</button>
       </div>
     </div>
   </div>
