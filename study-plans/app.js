@@ -695,6 +695,10 @@ async function renderNotes(notes, container, profileMap) {
               <a href="${escapeHtml(fileUrl)}" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">
                 <button type="button" class="secondary small-btn">Open File</button>
               </a>` : ''}
+              ${!isOwner ? `
+  <button type="button" class="secondary small-btn" onclick="submitReport('post', '${note.id}')">Report Post</button>
+  <button type="button" class="secondary small-btn" onclick="submitReport('user', '${note.user_id}')">Report User</button>
+` : ''}
             ${canDelete ? `
               <button type="button" class="danger small-btn" data-action="delete-note" data-note-id="${escapeHtml(note.id)}" data-file-path="${escapeHtml(note.file_url)}">${deleteLabel}</button>
             ` : ''}
@@ -773,6 +777,31 @@ function escapeHtml(str) {
   return String(str || '').replace(/[&<>"']/g, (m) => {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
   });
+}
+async function submitReport(targetType, targetId) {
+  if (!currentUser) {
+    alert("You must be logged in to report.");
+    return;
+  }
+
+  const reason = prompt(`Why are you reporting this ${targetType}? (e.g., inappropriate, spam, broken file)`);
+  if (!reason || reason.trim() === "") return;
+
+  const { error } = await supabaseClient
+    .from('reports')
+    .insert({
+      reporter_id: currentUser.id,
+      target_type: targetType,
+      target_id: targetId,
+      reason: reason.trim()
+    });
+
+  if (error) {
+    console.error("Report error:", error);
+    alert("There was an error submitting your report.");
+  } else {
+    alert("Report submitted successfully. Admins will review it shortly.");
+  }
 }
 
 initApp();
