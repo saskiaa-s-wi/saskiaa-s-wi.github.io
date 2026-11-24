@@ -29,6 +29,10 @@ const usernameScreen = document.getElementById("username-screen");
 const dashboardScreen = document.getElementById("dashboard-screen");
 const settingsScreen = document.getElementById("settings-screen");
 const adminScreen = document.getElementById("admin-screen");
+const privacyScreen = document.getElementById("privacy-screen");
+const privacyLink = document.getElementById("privacy-link");
+const privacyBackBtn = document.getElementById("privacy-back-btn");
+let screenBeforePrivacy = null; // the screen to return to when leaving the privacy page
 
 const navActions = document.getElementById("nav-actions");
 const userDisplay = document.getElementById("user-display");
@@ -122,7 +126,7 @@ function clearMsg() {
 // Switch Active Screen
 function showScreen(screen) {
   if (!screen) return;
-  [authScreen, usernameScreen, dashboardScreen, settingsScreen, adminScreen].forEach((s) => {
+  [authScreen, usernameScreen, dashboardScreen, settingsScreen, adminScreen, privacyScreen].forEach((s) => {
     if (s) s.classList.remove("active");
   });
   screen.classList.add("active");
@@ -220,7 +224,8 @@ async function handleAuthState(session) {
   // Stay on Settings or Admin if the user is already there (for example after a token refresh)
   const onSettings = settingsScreen && settingsScreen.classList.contains("active");
   const onAdmin = adminScreen && adminScreen.classList.contains("active");
-  if (!onSettings && !(onAdmin && isModeratorOrAdmin())) {
+  const onPrivacy = privacyScreen && privacyScreen.classList.contains("active");
+  if (!onSettings && !onPrivacy && !(onAdmin && isModeratorOrAdmin())) {
     showScreen(dashboardScreen);
     loadDashboardNotes();
   }
@@ -366,6 +371,29 @@ if (navAdminBtn) {
     showScreen(adminScreen);
     if (isAdmin()) loadAdminUsers();
     loadReports();
+  });
+}
+
+// Privacy Policy page: open from the footer link, return with the Back button
+if (privacyLink) {
+  privacyLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (!privacyScreen || privacyScreen.classList.contains("active")) return;
+
+    // Remember which screen the person was on
+    const screens = [authScreen, usernameScreen, dashboardScreen, settingsScreen, adminScreen];
+    screenBeforePrivacy = screens.find((s) => s && s.classList.contains("active")) || authScreen;
+
+    clearMsg();
+    showScreen(privacyScreen);
+    window.scrollTo(0, 0);
+  });
+}
+
+if (privacyBackBtn) {
+  privacyBackBtn.addEventListener("click", () => {
+    showScreen(screenBeforePrivacy || authScreen);
+    window.scrollTo(0, 0);
   });
 }
 
