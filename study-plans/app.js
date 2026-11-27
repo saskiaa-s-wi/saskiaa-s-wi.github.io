@@ -98,6 +98,13 @@ const confirmDeleteDataBtn = document.getElementById("confirm-delete-data-btn");
 const deleteModal = document.getElementById("delete-modal");
 const cancelDeleteBtn = document.getElementById("cancel-delete-btn");
 const confirmDeleteBtn = document.getElementById("confirm-delete-btn");
+const deleteModalText = document.getElementById("delete-modal-text");
+
+const removeModModal = document.getElementById("remove-mod-modal");
+const removeModText = document.getElementById("remove-mod-text");
+const cancelRemoveModBtn = document.getElementById("cancel-remove-mod-btn");
+const confirmRemoveModBtn = document.getElementById("confirm-remove-mod-btn");
+let moderatorToRemove = null;
 
 // Password Rule Validation: 8+ characters, 1 uppercase, 1 lowercase, 1 number
 function validatePassword(password) {
@@ -698,7 +705,41 @@ if (usersTableBody) {
     if (!btn) return;
     const username = btn.dataset.username;
     if (btn.dataset.action === "make-moderator") setUserRole(username, "moderator");
-    if (btn.dataset.action === "remove-moderator") setUserRole(username, "user");
+    if (btn.dataset.action === "remove-moderator") openRemoveModModal(username);
+  });
+}
+
+// "Are you sure?" popup before removing a moderator
+function openRemoveModModal(username) {
+  moderatorToRemove = username;
+  if (removeModText) {
+    removeModText.innerText = `@${username} will no longer be able to remove other students' public notes or files. You can make them a moderator again at any time.`;
+  }
+  if (confirmRemoveModBtn) {
+    confirmRemoveModBtn.disabled = false;
+    confirmRemoveModBtn.innerText = "Remove moderator";
+  }
+  if (removeModModal) removeModModal.classList.add("active");
+  if (cancelRemoveModBtn) cancelRemoveModBtn.focus(); // the safe choice is selected first
+}
+
+function closeRemoveModModal() {
+  moderatorToRemove = null;
+  if (removeModModal) removeModModal.classList.remove("active");
+}
+
+if (cancelRemoveModBtn) {
+  cancelRemoveModBtn.addEventListener("click", closeRemoveModModal);
+}
+
+if (confirmRemoveModBtn) {
+  confirmRemoveModBtn.addEventListener("click", async () => {
+    if (!moderatorToRemove) return;
+    const username = moderatorToRemove;
+    confirmRemoveModBtn.disabled = true;
+    confirmRemoveModBtn.innerText = "Removing...";
+    await setUserRole(username, "user");
+    closeRemoveModModal();
   });
 }
 
@@ -944,7 +985,7 @@ async function renderNotes(notes, container, profileMap) {
               <button type="button" class="secondary small-btn" data-action="report-user" data-target-id="${escapeHtml(note.user_id)}" data-target-label="${escapeHtml(author)}">Report User</button>
             ` : ''}
             ${canDelete ? `
-              <button type="button" class="danger small-btn" data-action="delete-note" data-note-id="${escapeHtml(note.id)}" data-file-path="${escapeHtml(note.file_url)}">${deleteLabel}</button>
+              <button type="button" class="danger small-btn" data-action="delete-note" data-note-id="${escapeHtml(note.id)}" data-file-path="${escapeHtml(note.file_url)}" data-note-title="${escapeHtml(note.topic_unit)}">${deleteLabel}</button>
             ` : ''}
           </div>
         </div>
@@ -968,15 +1009,21 @@ async function renderNotes(notes, container, profileMap) {
 
     const btn = e.target.closest("button[data-action='delete-note']");
     if (!btn) return;
-    openDeleteModal(btn.dataset.noteId, btn.dataset.filePath);
+    openDeleteModal(btn.dataset.noteId, btn.dataset.filePath, btn.dataset.noteTitle);
   });
 });
 
 // Open Delete Confirmation Modal
-function openDeleteModal(noteId, filePath) {
+function openDeleteModal(noteId, filePath, noteTitle) {
   noteToDeleteId = noteId;
   noteToDeleteFilePath = filePath;
+  if (deleteModalText) {
+    deleteModalText.innerText = noteTitle
+      ? `You are about to permanently delete "${noteTitle}" and its file. This cannot be undone.`
+      : "You are about to permanently delete this note and its file. This cannot be undone.";
+  }
   if (deleteModal) deleteModal.classList.add("active");
+  if (cancelDeleteBtn) cancelDeleteBtn.focus(); // the safe choice is selected first
 }
 
 // Close Delete Confirmation Modal
