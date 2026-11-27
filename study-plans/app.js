@@ -167,6 +167,73 @@ function updateRoleUI() {
   if (moderatorTools) moderatorTools.style.display = isAdmin() ? "block" : "none";
 }
 
+// ============================================================
+// Light / dark mode
+// The page picks a mode before it paints (see the small script in index.html).
+// The choice is saved on the user's profile so it follows them to other devices,
+// and in this browser so the page looks right the moment it opens.
+// ============================================================
+const THEME_STORAGE_KEY = "study-notes-theme"; // must match the script in index.html
+const themeToggleBtn = document.getElementById("theme-toggle-btn");
+
+function getCurrentTheme() {
+  return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
+}
+
+function renderThemeButton() {
+  if (!themeToggleBtn) return;
+  const isDark = getCurrentTheme() === "dark";
+  themeToggleBtn.innerText = isDark ? "☀️ Light" : "🌙 Dark";
+  themeToggleBtn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+}
+
+function applyTheme(theme) {
+  const chosen = theme === "dark" ? "dark" : "light";
+  document.documentElement.setAttribute("data-theme", chosen);
+  try { localStorage.setItem(THEME_STORAGE_KEY, chosen); } catch (e) { /* storage may be blocked */ }
+  renderThemeButton();
+}
+
+// Load the signed-in user's saved choice. This never blocks sign-in: if the
+// theme column is missing or the lookup fails, the current look is kept.
+async function loadSavedTheme() {
+  if (!currentUser) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from("profiles")
+      .select("theme")
+      .eq("id", currentUser.id)
+      .maybeSingle();
+    if (error || !data) return;
+    if (data.theme === "light" || data.theme === "dark") applyTheme(data.theme);
+  } catch (err) {
+    console.warn("Could not load saved theme:", err);
+  }
+}
+
+async function saveThemeToProfile(theme) {
+  if (!currentUser) return;
+  try {
+    const { error } = await supabaseClient
+      .from("profiles")
+      .update({ theme: theme })
+      .eq("id", currentUser.id);
+    if (error) console.warn("Could not save theme to your profile:", error.message);
+  } catch (err) {
+    console.warn("Could not save theme to your profile:", err);
+  }
+}
+
+renderThemeButton();
+
+if (themeToggleBtn) {
+  themeToggleBtn.addEventListener("click", () => {
+    const next = getCurrentTheme() === "dark" ? "light" : "dark";
+    applyTheme(next);
+    saveThemeToProfile(next);
+  });
+}
+
 // Application Initialization
 // onAuthStateChange fires once on page load (INITIAL_SESSION) and again on every
 // sign-in or sign-out, so it is the only listener needed. The setTimeout runs the
@@ -215,6 +282,9 @@ async function handleAuthState(session) {
     showScreen(usernameScreen);
     return;
   }
+
+  // Apply this user's saved light/dark choice (does nothing if they have not picked one)
+  await loadSavedTheme();
 
   if (!profile || !profile.username) {
     currentRole = (profile && profile.role) || 'user';
