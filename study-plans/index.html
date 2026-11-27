@@ -4,12 +4,26 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Study Notes & Plans Hub</title>
+
+  <script>
+    // Apply the saved (or device) light/dark choice before the page paints, so it does not flash
+    (function () {
+      var theme = null;
+      try { theme = localStorage.getItem("study-notes-theme"); } catch (e) {}
+      if (theme !== "dark" && theme !== "light") {
+        theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+      }
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
   
   <style>
     :root {
+      color-scheme: light;
       /* Pond palette, inspired by the water lily painting */
-      --primary: #2f7d76;          /* pond teal (the bridge and water) */
-      --primary-hover: #25645e;
+      --primary: #2a7670;          /* pond teal (the bridge and water) */
+      --primary-hover: #215d58;
+      --on-primary: #ffffff;       /* text on primary buttons */
       --accent: #d9668a;           /* lily pink */
       --accent-soft: #fbe6ee;
       --accent-deep: #9b3558;
@@ -20,16 +34,86 @@
       --surface-hover: #e8f1ea;
       --text: #1f3330;             /* deep forest */
       --text-muted: #5c716c;
+      --placeholder: #667b76;
       --border: #d9e5dd;
-      --error: #c8453f;
-      --error-hover: #a93832;
+      --error: #b3362f;
       --error-bg: #fdf0ee;
       --error-border: #f3c4bf;
+      --danger: #c8453f;
+      --danger-hover: #a93832;
       --success: #2f7d4f;
       --success-bg: #eef7ee;
       --success-border: #c3e3c9;
+      --disabled-bg: #d6e1dc;
+      --disabled-text: #5c716c;
+      --warn-bg: #fef3c7;
+      --warn-text: #92400e;
+      --mod-bg: #dcebe4;
+      --mod-text: #1f5f59;
+      --alert-bg: #fee2e2;
+      --alert-text: #991b1b;
+      --github-bg: #24292e;
+      --github-hover: #000000;
+      --github-border: #24292e;
+      --overlay: rgba(31, 51, 48, 0.5);
+      --screen-bg: rgba(255, 255, 255, 0.94);
+      --header-bg: linear-gradient(100deg, rgba(255, 255, 255, 0.94), rgba(255, 245, 248, 0.94) 55%, rgba(238, 244, 226, 0.94));
+      --wash:
+        radial-gradient(ellipse 60% 45% at 8% 0%, rgba(233, 143, 168, 0.28), transparent 70%),
+        radial-gradient(ellipse 55% 50% at 100% 12%, rgba(169, 184, 120, 0.30), transparent 70%),
+        radial-gradient(ellipse 70% 55% at 85% 100%, rgba(47, 125, 118, 0.20), transparent 70%),
+        radial-gradient(ellipse 50% 45% at 0% 95%, rgba(240, 150, 100, 0.16), transparent 70%);
       --shadow-sm: 0 1px 2px 0 rgb(31 77 74 / 0.08);
       --shadow-md: 0 6px 14px -3px rgb(31 77 74 / 0.14), 0 2px 5px -2px rgb(31 77 74 / 0.10);
+    }
+
+    /* Dark mode: the pond at night */
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --primary: #5fc1b6;
+      --primary-hover: #7fd3c9;
+      --on-primary: #0c1917;
+      --accent: #e58fa8;
+      --accent-soft: #3d2230;
+      --accent-deep: #f6b3c8;
+      --sage: #8fa35f;
+      --bg: #0d1716;
+      --card-bg: #152624;
+      --surface-soft: #1a2f2c;
+      --surface-hover: #223b37;
+      --text: #e9f2ef;
+      --text-muted: #a9c0ba;
+      --placeholder: #86a09a;
+      --border: #2f4b46;
+      --error: #ff9d96;
+      --error-bg: #3a1e1c;
+      --error-border: #6e3430;
+      --danger: #b8403a;
+      --danger-hover: #c8483f;
+      --success: #86e0a3;
+      --success-bg: #15301f;
+      --success-border: #2b5a3a;
+      --disabled-bg: #263d39;
+      --disabled-text: #86a09a;
+      --warn-bg: #4a3a12;
+      --warn-text: #fbd98b;
+      --mod-bg: #1d423d;
+      --mod-text: #a5e6dc;
+      --alert-bg: #4a1f1d;
+      --alert-text: #ffb8b2;
+      --github-bg: #2d333b;
+      --github-hover: #3a424d;
+      --github-border: #4b5563;
+      --overlay: rgba(0, 0, 0, 0.65);
+      --screen-bg: rgba(21, 38, 36, 0.94);
+      --header-bg: linear-gradient(100deg, rgba(21, 38, 36, 0.95), rgba(36, 27, 35, 0.95) 55%, rgba(24, 36, 28, 0.95));
+      --wash:
+        radial-gradient(ellipse 60% 45% at 8% 0%, rgba(229, 143, 168, 0.12), transparent 70%),
+        radial-gradient(ellipse 55% 50% at 100% 12%, rgba(143, 163, 95, 0.12), transparent 70%),
+        radial-gradient(ellipse 70% 55% at 85% 100%, rgba(95, 193, 182, 0.12), transparent 70%),
+        radial-gradient(ellipse 50% 45% at 0% 95%, rgba(240, 150, 100, 0.08), transparent 70%);
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+      --shadow-md: 0 8px 18px -4px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.4);
     }
 
     * {
@@ -128,6 +212,7 @@
       border-radius: 8px;
       font-size: 0.95rem;
       background-color: var(--card-bg);
+      color: var(--text);
       transition: border-color 0.15s ease;
     }
 
@@ -137,12 +222,12 @@
     textarea:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(47, 125, 118, 0.18);
+      box-shadow: 0 0 0 3px rgba(42, 118, 112, 0.22);
     }
 
     button {
       background-color: var(--primary);
-      color: white;
+      color: var(--on-primary);
       border: none;
       padding: 0.75rem 1.25rem;
       border-radius: 8px;
@@ -160,7 +245,8 @@
     }
 
     button:disabled {
-      background-color: #a9bbb5;
+      background-color: var(--disabled-bg);
+      color: var(--disabled-text);
       cursor: not-allowed;
     }
 
@@ -175,23 +261,24 @@
     }
 
     button.danger {
-      background-color: var(--error);
-      color: white;
+      background-color: var(--danger);
+      color: #ffffff;
     }
 
     button.danger:hover {
-      background-color: var(--error-hover);
+      background-color: var(--danger-hover);
     }
 
     .github-btn {
-      background-color: #24292e;
-      color: white;
+      background-color: var(--github-bg);
+      border: 1px solid var(--github-border);
+      color: #ffffff;
       width: 100%;
       margin-top: 1rem;
     }
 
     .github-btn:hover {
-      background-color: #000000;
+      background-color: var(--github-hover);
     }
 
     .divider {
@@ -400,7 +487,7 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(31, 51, 48, 0.5);
+      background: var(--overlay);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -444,8 +531,8 @@
       letter-spacing: 0.04em;
       padding: 0.15rem 0.5rem;
       border-radius: 999px;
-      background: #fef3c7;
-      color: #92400e;
+      background: var(--warn-bg);
+      color: var(--warn-text);
     }
 
     .small-btn {
@@ -477,13 +564,13 @@
     }
 
     .role-pill.role-moderator {
-      background: #dcebe4;
-      color: #1f5f59;
+      background: var(--mod-bg);
+      color: var(--mod-text);
     }
 
     .role-pill.role-admin {
-      background: #fef3c7;
-      color: #92400e;
+      background: var(--warn-bg);
+      color: var(--warn-text);
     }
 
     /* Report popup and Reports list */
@@ -533,8 +620,8 @@
       letter-spacing: 0.04em;
       padding: 0.15rem 0.55rem;
       border-radius: 999px;
-      background: #fee2e2;
-      color: #991b1b;
+      background: var(--alert-bg);
+      color: var(--alert-text);
     }
 
     .report-item .report-date {
@@ -609,19 +696,55 @@
     }
 
     .policy .fill-in {
-      background: #fef3c7;
+      color: var(--warn-text);
+      background: var(--warn-bg);
       padding: 0.1rem 0.4rem;
       border-radius: 4px;
       font-weight: 600;
     }
+    /* Light and dark mode toggle */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    ::placeholder {
+      color: var(--placeholder);
+      opacity: 1;
+    }
+
+    /* Delete my data (danger zone) */
+    .danger-zone {
+      margin-top: 2rem;
+      padding: 1.25rem;
+      border: 1px solid var(--error-border);
+      background: var(--error-bg);
+      border-radius: 10px;
+    }
+
+    .danger-zone h3 {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--error);
+    }
+
+    .danger-zone p {
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+
+    button.danger:disabled {
+      background-color: var(--disabled-bg);
+      color: var(--disabled-text);
+    }
+
     /* Pond theme: watercolor wash, soft headings, lily touches */
     body {
       background-color: var(--bg);
-      background-image:
-        radial-gradient(ellipse 60% 45% at 8% 0%, rgba(233, 143, 168, 0.28), transparent 70%),
-        radial-gradient(ellipse 55% 50% at 100% 12%, rgba(169, 184, 120, 0.30), transparent 70%),
-        radial-gradient(ellipse 70% 55% at 85% 100%, rgba(47, 125, 118, 0.20), transparent 70%),
-        radial-gradient(ellipse 50% 45% at 0% 95%, rgba(240, 150, 100, 0.16), transparent 70%);
+      background-image: var(--wash);
       background-attachment: fixed;
     }
 
@@ -630,8 +753,10 @@
     }
 
     header {
-      background: linear-gradient(100deg, rgba(255, 255, 255, 0.94), rgba(255, 245, 248, 0.94) 55%, rgba(238, 244, 226, 0.94));
+      background: var(--header-bg);
       backdrop-filter: blur(6px);
+      flex-wrap: wrap;
+      gap: 0.75rem;
     }
 
     header h1::before {
@@ -646,7 +771,7 @@
     }
 
     .screen {
-      background-color: rgba(255, 255, 255, 0.94);
+      background-color: var(--screen-bg);
       background-image: linear-gradient(90deg, var(--accent), var(--sage), var(--primary));
       background-size: 100% 4px;
       background-repeat: no-repeat;
@@ -681,14 +806,17 @@
 
   <header>
     <h1>Study Notes & Plans Hub</h1>
-    <nav id="nav-actions" style="display: none;">
-      <span id="user-display" style="font-weight: 600; font-size: 0.9rem;"></span>
-      <span id="role-badge" class="role-badge"></span>
-      <button class="secondary" id="nav-dashboard-btn" type="button">Dashboard</button>
-      <button class="secondary" id="nav-settings-btn" type="button">Settings</button>
-      <button class="secondary" id="nav-admin-btn" type="button" style="display: none;">Admin</button>
-      <button class="secondary" id="signout-btn" type="button">Sign Out</button>
-    </nav>
+    <div class="header-actions">
+      <button type="button" class="secondary small-btn" id="theme-toggle-btn" aria-label="Switch to dark mode">🌙 Dark</button>
+      <nav id="nav-actions" style="display: none;">
+        <span id="user-display" style="font-weight: 600; font-size: 0.9rem;"></span>
+        <span id="role-badge" class="role-badge"></span>
+        <button class="secondary" id="nav-dashboard-btn" type="button">Dashboard</button>
+        <button class="secondary" id="nav-settings-btn" type="button">Settings</button>
+        <button class="secondary" id="nav-admin-btn" type="button" style="display: none;">Admin</button>
+        <button class="secondary" id="signout-btn" type="button">Sign Out</button>
+      </nav>
+    </div>
   </header>
 
   <div class="container">
@@ -806,6 +934,12 @@
           <button type="submit">Update Password</button>
         </form>
       </div>
+
+      <div class="danger-zone">
+        <h3>Delete my data</h3>
+        <p>Permanently delete your account, your username, every note you uploaded, all your files, and the reports you sent. This cannot be undone.</p>
+        <button type="button" class="danger" id="delete-data-btn">Delete my data</button>
+      </div>
     </div>
     <div id="admin-screen" class="screen">
       <h2>Admin</h2>
@@ -850,17 +984,17 @@
       <ul>
         <li>We only save what the app needs to work: your sign-in details, your username, and the notes and files you upload.</li>
         <li>Your private notes are for you only. Your public notes can be seen by every student who is signed in.</li>
-        <li>You can delete any of your notes at any time. To delete your whole account, ask us (see "Questions or requests" below).</li>
+        <li>You can delete any of your notes at any time, or delete everything we hold about you with one button in Settings.</li>
         <li>We do not sell your information, and this app has no ads and no tracking tools.</li>
       </ul>
 
       <h3>What we save</h3>
       <ul>
         <li><strong>Your sign-in:</strong> your email address and password if you sign up with email, or the email address GitHub shares with us if you use GitHub. Passwords are scrambled when they are saved, so nobody can read them, including us. We never see your GitHub password.</li>
-        <li><strong>Your profile:</strong> your username and your role (regular user, moderator, or admin).</li>
+        <li><strong>Your profile:</strong> your username, your role (regular user, moderator, or admin), and your light or dark mode choice.</li>
         <li><strong>Your notes:</strong> the class title, topic or unit, description, the file you upload (its name, size, and the file itself), whether it is public or private, and when you added it.</li>
         <li><strong>Reports:</strong> if you report a post or a user, we save who you are, what you reported, the reason you gave, and when you sent it.</li>
-        <li><strong>In your browser:</strong> a sign-in token that keeps you signed in on this device. Signing out removes it.</li>
+        <li><strong>In your browser:</strong> a sign-in token that keeps you signed in on this device (signing out removes it), and a note of your last light or dark mode choice so the page looks right when it opens.</li>
       </ul>
       <p>Your data is stored with Supabase, the service that runs this app's database and file storage. GitHub is used if you choose to sign in with GitHub, and this site is hosted on GitHub Pages.</p>
 
@@ -907,11 +1041,11 @@
         <li><strong>Delete a note and its file:</strong> go to the Dashboard, find your note under "Public Files &amp; Notes" or "My Private Files &amp; Notes", click <strong>Delete</strong>, and confirm. The note and its file are removed for good.</li>
         <li><strong>Remove your sign-in from this device:</strong> click <strong>Sign Out</strong>.</li>
         <li><strong>Change your password:</strong> go to Settings, then Change Password (email accounts only).</li>
-        <li><strong>Delete your whole account:</strong> there is no button for this yet, so please contact us using the details below. We will delete your account, username, notes, files, and the reports you sent, within 30 days. Reports other people sent about you may be kept for a while so moderators can finish reviewing them.</li>
+        <li><strong>Delete everything:</strong> go to Settings, click <strong>Delete my data</strong>, type DELETE, and confirm. This removes your account, username, notes, files, and the reports you sent. It happens straight away and cannot be undone. Reports other people sent about you may be kept for a while so moderators can finish reviewing them.</li>
       </ul>
 
       <h3>Questions or requests</h3>
-      <p>To ask a question, or to ask us to delete your account, contact: <span class="fill-in">[saskiawibis@gmail.com]</span></p>
+      <p>To ask a question, or if you need help deleting your data, contact: <span class="fill-in">[PUT YOUR CONTACT EMAIL HERE]</span></p>
 
       <h3>Changes to this page</h3>
       <p>If we change this policy, we will update the date at the top of this page.</p>
@@ -924,8 +1058,8 @@
 
   <div id="delete-modal" class="modal-overlay">
     <div class="modal-box">
-      <h3>Delete Material</h3>
-      <p>Are you sure you want to permanently delete this file and record?</p>
+      <h3>Are you sure?</h3>
+      <p id="delete-modal-text">You are about to permanently delete this note and its file. This cannot be undone.</p>
       <div class="modal-actions">
         <button type="button" class="secondary" id="cancel-delete-btn">Cancel</button>
         <button type="button" class="danger" id="confirm-delete-btn">Delete</button>
@@ -943,6 +1077,31 @@
       <div class="modal-actions">
         <button type="button" class="secondary" id="cancel-report-btn">Cancel</button>
         <button type="button" class="danger" id="submit-report-btn">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="delete-data-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Are you sure?</h3>
+      <p>This permanently deletes your account, your username, every note you uploaded, all your files, and the reports you sent. You will be signed out. It cannot be undone.</p>
+      <label for="delete-data-confirm">Type <strong>DELETE</strong> to confirm</label>
+      <input type="text" id="delete-data-confirm" autocomplete="off" placeholder="DELETE" style="margin-bottom: 0.75rem;">
+      <div id="delete-data-msg" class="modal-msg"></div>
+      <div class="modal-actions">
+        <button type="button" class="secondary" id="cancel-delete-data-btn">Cancel</button>
+        <button type="button" class="danger" id="confirm-delete-data-btn" disabled>Delete everything</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="remove-mod-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Are you sure?</h3>
+      <p id="remove-mod-text">This person will lose moderator powers.</p>
+      <div class="modal-actions">
+        <button type="button" class="secondary" id="cancel-remove-mod-btn">Cancel</button>
+        <button type="button" class="danger" id="confirm-remove-mod-btn">Remove moderator</button>
       </div>
     </div>
   </div>
