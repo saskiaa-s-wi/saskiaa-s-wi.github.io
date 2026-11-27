@@ -157,6 +157,14 @@ function isModeratorOrAdmin() {
   return currentRole === 'moderator' || currentRole === 'admin';
 }
 
+// Format username with role badge (two hibiscus for admin, one for moderator)
+function formatUsernameWithBadge(username, role) {
+  if (!username) return "";
+  if (role === "admin") return `@${username} 🌺🌺`;
+  if (role === "moderator") return `@${username} 🌺`;
+  return `@${username}`;
+}
+
 // Show the role badge and the Admin button
 function updateRoleUI() {
   if (roleBadge) {
@@ -302,7 +310,7 @@ async function handleAuthState(session) {
 
   currentRole = profile.role || 'user';
   updateRoleUI();
-  if (userDisplay) userDisplay.innerText = `@${profile.username}`;
+  if (userDisplay) userDisplay.innerText = formatUsernameWithBadge(profile.username, currentRole);
 
   // Hide password change box for GitHub users
   if (currentUser.app_metadata && currentUser.app_metadata.provider === "github") {
@@ -431,7 +439,7 @@ if (usernameForm) {
 
     currentRole = savedRows[0].role || 'user';
     updateRoleUI();
-    if (userDisplay) userDisplay.innerText = `@${username}`;
+    if (userDisplay) userDisplay.innerText = formatUsernameWithBadge(username, currentRole);
     showMsg("Username saved successfully!", false);
     showScreen(dashboardScreen);
     loadDashboardNotes();
@@ -665,7 +673,7 @@ async function loadAdminUsers() {
     }
     return `
       <tr>
-        <td>${u.username ? '@' + escapeHtml(u.username) : '<em>no username yet</em>'}</td>
+        <td>${u.username ? escapeHtml(formatUsernameWithBadge(u.username, u.role)) : '<em>no username yet</em>'}</td>
         <td><span class="role-pill role-${escapeHtml(u.role)}">${escapeHtml(u.role)}</span></td>
         <td>${actionHtml}</td>
       </tr>`;
@@ -866,14 +874,18 @@ async function getFileAccessUrl(filePath) {
 async function loadDashboardNotes() {
   if (!currentUser) return;
 
-  // Usernames for the "Uploaded by" line
+  // Usernames and roles for the "Uploaded by" line
   const { data: profiles, error: profilesError } = await supabaseClient
     .from("profiles")
-    .select("id, username");
+    .select("id, username, role");
   if (profilesError) showMsg(`Error loading profiles: ${profilesError.message}`);
 
   const profileMap = {};
-  if (profiles) profiles.forEach((p) => { profileMap[p.id] = p.username; });
+  if (profiles) {
+    profiles.forEach((p) => {
+      profileMap[p.id] = { username: p.username, role: p.role };
+    });
+  }
 
   // Public notes
   const { data: publicNotes, error: publicError } = await supabaseClient
@@ -953,7 +965,10 @@ async function renderNotes(notes, container, profileMap) {
     const canDelete = isOwner || (note.is_public && isModeratorOrAdmin());
     const deleteLabel = isOwner ? "Delete" : "Remove (moderator)";
 
-    const author = profileMap[note.user_id] ? `@${profileMap[note.user_id]}` : "Unknown";
+    const authorProfile = profileMap[note.user_id];
+    const author = authorProfile && authorProfile.username
+      ? formatUsernameWithBadge(authorProfile.username, authorProfile.role)
+      : "Unknown";
     const fileUrl = await getFileAccessUrl(note.file_url);
     const fileName = note.file_name || note.file_url.split('/').pop();
     const mediaMarkup = buildMediaMarkup(fileUrl, fileName);
@@ -1181,11 +1196,15 @@ async function loadReports() {
     return;
   }
 
-  // Usernames for reporters and reported users
-  const { data: profiles } = await supabaseClient.from("profiles").select("id, username");
+  // Usernames and roles for reporters and reported users
+  const { data: profiles } = await supabaseClient.from("profiles").select("id, username, role");
   const nameMap = {};
-  if (profiles) profiles.forEach((p) => { nameMap[p.id] = p.username; });
-  const nameOf = (id) => (nameMap[id] ? `@${nameMap[id]}` : "Unknown user");
+  if (profiles) {
+    profiles.forEach((p) => {
+      nameMap[p.id] = { username: p.username, role: p.role };
+    });
+  }
+  const nameOf = (id) => (nameMap[id] && nameMap[id].username ? formatUsernameWithBadge(nameMap[id].username, nameMap[id].role) : "Unknown user");
 
   // The posts that were reported
   const postIds = reports.filter((r) => r.target_type === "post").map((r) => r.target_id);
